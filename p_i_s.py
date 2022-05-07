@@ -17,9 +17,9 @@ def augment_mat_k(mat_sys, mat_k, mat0,
     :param mat_sys: discrete time system dynamic
     :param criteria:
     """
-    nrow = mat_k.shape[0]
     mat_kp1 = mat0
-    mat_candidate = np.matmul(mat_k, mat_sys)
+    mat_candidate = np.matmul(mat_k, mat_sys)   # M_k*(Ax)<=1
+    nrow = mat_candidate.shape[0]
     for i in range(nrow):
         row = -1 * mat_candidate[i, ]  # FIXME: default linprog minimize, here maximize needed
         # ub:upper bound
