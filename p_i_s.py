@@ -6,7 +6,8 @@ from utils_plot_constraint import plot_polytope
 
 
 def augment_mat_k(mat_sys, mat_k, mat0,
-                  fun_criteria=lambda x: x < 1):
+                  fun_criteria=lambda x: x < 1,
+                  call_back=None):
     """augment.
     t_N feasibility: M0
     1-step backward feasibility: M_1: [M_0A] and M_0
@@ -17,7 +18,7 @@ def augment_mat_k(mat_sys, mat_k, mat0,
     :param mat_sys: discrete time system dynamic
     :param criteria:
     """
-    mat_kp1 = mat0
+    mat_kp1 = mat0  # FIXME: always start with M0 for testing
     mat_candidate = np.matmul(mat_k, mat_sys)   # M_k*(Ax)<=1
     nrow = mat_candidate.shape[0]
     for i in range(nrow):
@@ -30,6 +31,8 @@ def augment_mat_k(mat_sys, mat_k, mat0,
         max_val = res.fun
         if fun_criteria(max_val):  # if worst case satisfies constraint, then no need for this constraint to exist
             mat_kp1 = np.vstack((mat_kp1, row))   # FIXME: not stack M0!
+            if call_back:
+                call_back(mat_kp1, "the %d th row: %s" % (i, str(row)))
     return mat_kp1 # FIXME:  return should be outside for loop!
 
 def test_augment_mat_k():
@@ -38,18 +41,19 @@ def test_augment_mat_k():
 
 
 def iterate_invariance(mat0, A, n_iter=10, verbose=True, call_back=None):
-    mat_k = mat0
-    for _ in range(n_iter):
-        mat_k = augment_mat_k(mat_k=mat_k, mat0=mat0, mat_sys=A)
+    mat_k_backstep = mat0
+    for k in range(n_iter):
+        mat_k_backstep = augment_mat_k(mat_k=mat_k_backstep, mat0=mat0, mat_sys=A, call_back=call_back)
         if verbose:
-            print(mat_k)
+            print("iteration %d" % (k))
+            print(mat_k_backstep)
         if call_back:
-            call_back(mat_k)
-    return mat_k
+            call_back(mat_k_backstep, "iteration %d" % (k))
+    return mat_k_backstep
 
 def test_iterate_invariance():
     from script_input import M0, A
     plot_polytope(M0)
-    constraint = iterate_invariance(mat0=M0, A=A, n_iter=10, call_back=plot_polytope)
+    constraint = iterate_invariance(mat0=M0, A=A, n_iter=3, call_back=plot_polytope)
     constraint = iterate_invariance(mat0=M0, A=A, n_iter=100)
     plot_polytope(constraint)
