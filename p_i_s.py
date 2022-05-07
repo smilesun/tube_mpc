@@ -28,8 +28,8 @@ def augment_mat_k(mat_sys, mat_k, mat0,
                       A_ub=mat_kp1,  # FIXME: not mat_k!
                       b_ub=b_ub)
         max_val = res.fun
-        if fun_criteria(max_val):
-            mat_kp1 = np.vstack((mat0, row))
+        if fun_criteria(max_val):  # if worst case satisfies constraint, then no need for this constraint to exist
+            mat_kp1 = np.vstack((mat_kp1, row))   # FIXME: not stack M0!
     return mat_kp1 # FIXME:  return should be outside for loop!
 
 def test_augment_mat_k():
@@ -52,3 +52,4 @@ def test_iterate_invariance():
     plot_polytope(M0)
     constraint = iterate_invariance(mat0=M0, A=A, n_iter=10, call_back=plot_polytope)
     constraint = iterate_invariance(mat0=M0, A=A, n_iter=100)
+    plot_polytope(constraint)
