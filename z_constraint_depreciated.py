@@ -1,12 +1,36 @@
 import numpy as np
 
 
-class Constraint():
+class ConstraintLNorminalNoKronecker():
+    """ConstraintLNorminal.
+    1. First row constraint:
+
+    [-I_{d},[0]_d,[0]_d,  B_{d*r],[0]_{d*r],[0]_{d*r]] x = A_{d*d}[x_0]_{d*1}
+
+
+    2. The rest equality constraint:
+
+        Ax_k + Bu_k = x_{k+1}:
+
+    Ax_1 + Bu_1 = x_2
+    Ax_2 + Bu_2 = x_3
+    [[A]_d,     -I_d,  [0]_{d*d} | [B]_{d*r}, [0]_{d*r}, [0]_{d*r} ] x = [0]_{d*1}
+    [[0]_{d*d}, [A]_d, -I_d      | [0]_{d*r}, [B]_{d*r}, [0]_{d*r} ] x = [0]_{d*1}
+    """
+
+    def __init__(self):
+        mat_sys = self.obj_dyn.mat_sys
+        mat_input = self.obj_dyn.mat_input
+        mat_sys = np.ones((d, d))
+        n = 4  # horizon
+        d = 2
+        self = object()
+
     def __call__(self, x):
         """__call__.
         :param x: current state
         """
-        mat_sys = np.ones((d, d))
+        d = x.shape[0]
         list_v_block = []
         block_first_row = self.build_first_line_constraint()
         list_v_block.append(block_first_row)
@@ -16,9 +40,10 @@ class Constraint():
         np.vstack(list_v_block)
 
     def build_first_line_constraint():
+        """build_first_line_constraint."""
         # [[-I_{d},[0]_d,[0]_d,  B_{d*r],[0]_{d*r],[0]_{d*r]]
         block_zero = np.hstack([np.zeros((d, d)) for _ in range(d-1)])
-        list_block = [-1 * np.eye(d), block_zero, self.B, block_zero]
+        list_block = [-1 * np.eye(d), block_zero, self.mat_input, block_zero]
         np.hstack(list_block)
 
 
@@ -26,11 +51,6 @@ class Constraint():
         """build_eq_constraint.
         :param ind_row:
         """
-        mat_sys = self.obj_dyn.mat_sys
-        mat_input = self.obj_dyn.mat_input
-        n = 4  # horizon
-        d = 2
-
         block_middle = np.hstack([mat_sys, np.eye(d)])
         block_left, block_right = self.build_eq_constraint_sys_zero_left_right(ind_row, d)
         list_block = []
@@ -44,8 +64,6 @@ class Constraint():
 
     def build_eq_constraint_sys_zero_left_right(self, ind_row, d):
         """
-        build the left part of constraint LHS
-
         First row constraint:
 
         [-I_{d},[0]_d,[0]_d,  B_{d*r],[0]_{d*r],[0]_{d*r]] x = A_{d*d}[x_0]_{d*1}
