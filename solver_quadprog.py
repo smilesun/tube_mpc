@@ -15,7 +15,7 @@ def quadprog_solve_qp(P, A_ub, b_ub, A_eq=None, b_eq=None, q=None):
     :param A_eq:
     :param b_eq:
     The code below converts the above parameters to the follwing problem:
-    quadprog.solve_qp(qp_G, qp_a, qp_C, qp_b, meq)[0]
+    quadprog.solve_qp(mat_pos_def, qp_a, qp_C, qp_b, meq)[0]
     Minimize     1/2 x^T G x - a^T x
     Subject to   C.T x >= b
     <=>   -C.T x <= -b
@@ -35,7 +35,7 @@ def quadprog_solve_qp(P, A_ub, b_ub, A_eq=None, b_eq=None, q=None):
             the first meq constraints are treated as equality constraints,
             all further as inequality constraints (defaults to 0).
             """
-    qp_G = .5 * (P + P.T)   # make sure P is symmetric
+    mat_pos_def = .5 * (P + P.T)   # make sure P is symmetric
     if A_eq is None:
         A_eq = np.zeros_like(A_ub)
     if b_eq is None:
@@ -46,7 +46,7 @@ def quadprog_solve_qp(P, A_ub, b_ub, A_eq=None, b_eq=None, q=None):
     qp_C = -1.0 * numpy.vstack([A_eq, A_ub]).T
     qp_b = -1.0 * numpy.hstack([b_eq, b_ub])
     meq = A_eq.shape[0]
-    return quadprog.solve_qp(qp_G, qp_a, qp_C, qp_b, meq)[0]
+    return quadprog.solve_qp(mat_pos_def, qp_a, qp_C, qp_b, meq)[0]
 
 
 def test_qp():

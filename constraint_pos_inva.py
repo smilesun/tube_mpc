@@ -5,6 +5,20 @@ from scipy.optimize import linprog
 from utils_plot_constraint import plot_polytope
 
 
+class PosInvaBuilder():
+    def __init__(self, mat_sys,
+                 mat_state_constraint):
+        self.mat_state_constraint = mat_state_constraint
+        self.mat_sys = mat_sys
+
+    def __call__(self, n_iter):
+        mat_reach_constraint = iterate_invariance(
+            mat0=self.mat_state_constraint,
+            A=self.mat_sys,
+            n_iter=n_iter)
+        return mat_reach_constraint
+
+
 def augment_mat_k(mat_sys, mat_k, mat0,
                   fun_criteria=lambda x: x < 1,
                   call_back=None):

@@ -1,68 +1,59 @@
 import numpy as np
-from solver_quadprog import quadprog_solve_qp
-
-
-def qp_x_u(mat_q, mat_r, mat_dyn_eq, mat_b_dyn_eq, mat_inf_pos_inva):
-    """
-    decision variable: [x_{1:N}, u_{1:N}]^T
-    """
-    P = np.block([[mat_q, np.zeros((mat_q.shape[0], mat_r.shape[1]))],
-                  [np.zeros((mat_r.shape[0], mat_q.shape[1])), mat_r]])
-
-    u = quadprog_solve_qp(P=P, A_ub=mat_inf_pos_inva, b_ub=np.ones(mat_inf_pos_inva.shape[0]))
-    return u
+from constraint_pos_inva import PosInvaBuilder
+from constraint_eq_ldyn import ConstraintEqLdyn
+from lqr_solver import qp_x_u
 
 
 class QP_MPC():
     """
-    N: horizon of planning where N is the terminal point
+    T: horizon of planning where T is the terminal point
     dim_s: dimension of dynamic system
     Dynamic (Equality) Constraint:
-        [diag[A]_{N-1}, [0]_{N-1*dim_s}, diag[B]_{N-1}}]
+        [diag[A]_{T-1}, [0]_{T-1*dim_s}, diag[B]_{T-1}}]
 
-        :dim(diag[A]_{N-1}) = (dim_s * (N-1)) * (dim_s * (N-1))
-        :dim(diag[B]_{N-1}}) = (dim_s*(N-1)) * (dim_u * (N-1))
-    suppose N = 3
-    decision variables:  u_0, u_1, u_2=u_{N-1}
-                         x_1, x_2, x_3=x_{N}
+        :dim(diag[A]_{T-1}) = (dim_s * (T-1)) * (dim_s * (T-1))
+        :dim(diag[B]_{T-1}}) = (dim_s*(T-1)) * (dim_u * (T-1))
+    suppose T = 3
+    decision variables:  u_0, u_1, u_2=u_{T-1}
+                         x_1, x_2, x_3=x_{T}
     input: current state x_0=x
     equality constraint for input and decision variable: Ax_0 + Bu_0 = x_1
-    where input is x=x_0, decision variable is u_0, x_1:
-    let x=[x_1, x_2, x_3=x_N, u_0, u_1, u_2=u_{N-1}
-    then,
-    [-I_{d},[0]_d,[0]_d,  B_{d*r],[0]_{d*r],[0]_{d*r]] x = A_{d*d}[x_0]_{d*1}
-    The rest equality constraint:
-        Ax_k + Bu_k = x_{k+1}:
-    Ax_1 + Bu_1 = x_2
-    Ax_2 + Bu_2 = x_3
-    [[A]_d,     -I_d,  [0]_{d*d} | [B]_{d*r}, [0]_{d*r}, [0]_{d*r} ]x = [0]_{d*1}
-    [[0]_{d*d}, [A]_d, -I_d      | [0]_{d*r}, [B]_{d*r}, [0]_{d*r} ]x = [0]_{d*1}
     ........................
     Inequality constraint
     [0, 0, M_{inf}, 0, 0] x < 1
     """
-    def __init__(self, obj_dyn,
-                 eq_constraint_builder,
-                 inf_pos_inva_builder,
-                 mat_q, mat_r):
+    def __init__(self, obj_dyn, mat_q, mat_r, pos_inva_max_iter=10):
         """__init__.
         :param obj_dyn:
         """
         self.obj_dyn = obj_dyn
         self.mat_q = mat_q
         self.mat_r = mat_r
-        self.eq_constraint_builder = eq_constraint_builder()
-        self._mat_inf_pos_inva = inf_pos_inva_builder()
+        self.eq_constraint_builder = ConstraintEqLdyn(
+            mat_input=self.obj_dyn.mat_input,
+            mat_sys=self.obj_dyn.mat_sys)
+        self._mat_inf_pos_inva = PosInvaBuilder(
+            mat_sys=self.obj_dyn.mat_sys,
+            mat_state_constraint=self.obj_dyn.mat_state_constraint)(
+                n_iter=pos_inva_max_iter)
 
     @property
     def mat_inf_pos_inva(self):
+        """mat_inf_pos_inva.
+        as a property, dynamic generation of positive invariant set is possible
+        """
         return self._mat_inf_pos_inva
 
-    def __call__(self, x, horizon):
+    def __call__(self, x_obs, horizon):
         """__call__.
         :param x: current state
         """
-        mat_dyn_eq, mat_b_dyn_eq = self.eq_constraint_builder(x, horizon)
+        dim_sys = x_obs.shape[0]
+        mat_dyn_eq, mat_b_dyn_eq = self.eq_constraint_builder(x_obs, horizon)
         # A_ub, b_ub = self.ub_constraint_builder()
-        u = qp_x_u(self.mat_q, self.mat_r, mat_dyn_eq, mat_b_dyn_eq, self.mat_inf_pos_inva)
-        return u
+        # # online generation of pos inva set
+        vec_x_u = qp_x_u(self.mat_q, self.mat_r,
+                         mat_dyn_eq, mat_b_dyn_eq,
+                         self.mat_inf_pos_inva)
+        pos_u = (1+horizon)*dim_sys-1
+        return vec_x_u[pos_u:pos_u+self.obj_dyn.dim_u, 1]
