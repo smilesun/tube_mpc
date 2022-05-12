@@ -1,8 +1,8 @@
 import numpy as np
 
 
-class ConstraintEQLdyn():
-    """Equality Constraint
+class ConstraintEqLdyn():
+    """Equality Constraint for Linear Dynamic System
     - Decision variable: d = x_{1:T}, u_{0:T-1}
         - First constraint: x_1 = Ax_0 + Bu_0 with dimension:  n*1
         In block matrix form including all decision variables:
@@ -33,7 +33,7 @@ class ConstraintEQLdyn():
     - Use matrix subspace decomposition
     M[2:T*n, :]=block(A)+block(I)+block(B)
     block(A)=[kron(A_{n}, eye(T)), 0_{T*n, n}, | 0_{T*n, T*r}        ]
-    block(B)=[0_{T*n,T*n}                      | kron(B_{n*r}, eye(T)]
+    block(B)=[0_{T*n,(T+1)*n}                  | kron(B_{n*r}, eye(T)]
     block(I)=[0_{T*n,n}, -1*kron(I_n, eye(T))  | 0_{T*n, T*r}        ]
     - M=vstack(M[1,:], M[2:T*n,:])
     """
@@ -54,15 +54,16 @@ class ConstraintEQLdyn():
         :param x: current state
         """
         n = x.shape[0]
+        x = x.reshape(n, 1)
         r = self.dim_input
         assert n == self.dim_sys
         mat_1_zero = np.zeros((n, horizon*(n+r)))
         mat_1 = np.hstack([np.eye(n), mat_1_zero])
-        mat_2 = self.build_block_A(horizon, n, r) + \
-            self.build_block_b(horizon, n) + \
-            self.build_block_eye(horizon, n, r)
+        mat_2 = self.build_block_A(horizon, n, r)
+        mat_2 += self.build_block_b(horizon, n)
+        mat_2 += self.build_block_eye(horizon, n, r)
         mat_lhs = np.vstack([mat_1, mat_2])
-        mat_rhs = np.vstack([x, np.zeros(horizon*(n+r), 1)])
+        mat_rhs = np.vstack([x, np.zeros((horizon*(n+r), 1))])
         return mat_lhs, mat_rhs
 
     def build_block_eye(self, horizon, n, r):
@@ -82,10 +83,10 @@ class ConstraintEQLdyn():
         """
         - build subspace of constraint matrix M with only A involved:
 
-        block(B)=[0_{T*n,T*n}| kron(B_{n*r}, eye(T)]
+        block(B)=[0_{T*n,(T+1)*n}| kron(B_{n*r}, eye(T)]
         - let horizon change each time, so keep horizon as parameter
         """
-        block_zero_a = np.zeros((horizon*n, horizon*n))
+        block_zero_a = np.zeros((horizon*n, (horizon+1)*n))
         block_b_subspace = np.kron(self.mat_input, np.eye(horizon))
         block_b_full_space = np.hstack(
             [block_zero_a, block_b_subspace])
