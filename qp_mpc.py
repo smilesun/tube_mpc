@@ -1,7 +1,7 @@
 import numpy as np
-from constraint_pos_inva import PosInvaBuilder
+from constraint_pos_inva_terminal import PosInvaTerminalSetBuilder
 from constraint_eq_ldyn import ConstraintEqLdyn
-from lqr_solver import qp_x_u
+from lqr_solver import LqrQp
 
 
 class QP_MPC():
@@ -32,17 +32,19 @@ class QP_MPC():
         self.eq_constraint_builder = ConstraintEqLdyn(
             mat_input=self.obj_dyn.mat_input,
             mat_sys=self.obj_dyn.mat_sys)
-        self._mat_inf_pos_inva = PosInvaBuilder(
+        self._mat_terminal_inf_pos_inva = PosInvaTerminalSetBuilder(
             mat_sys=self.obj_dyn.mat_sys,
             mat_state_constraint=self.obj_dyn.mat_state_constraint)(
                 n_iter=pos_inva_max_iter)
+        self.lqr_solver = LqrQp(self._mat_terminal_inf_pos_inva,
+                                self.mat_q,
+                                self.mat_r)
 
     @property
     def mat_inf_pos_inva(self):
         """mat_inf_pos_inva.
-        as a property, dynamic generation of positive invariant set is possible
         """
-        return self._mat_inf_pos_inva
+        return self._mat_terminal_inf_pos_inva
 
     def __call__(self, x_obs, horizon):
         """__call__.
@@ -52,8 +54,10 @@ class QP_MPC():
         mat_dyn_eq, mat_b_dyn_eq = self.eq_constraint_builder(x_obs, horizon)
         # A_ub, b_ub = self.ub_constraint_builder()
         # # online generation of pos inva set
-        vec_x_u = qp_x_u(self.mat_q, self.mat_r,
-                         mat_dyn_eq, mat_b_dyn_eq,
-                         self.mat_inf_pos_inva)
+        vec_x_u = self.lqr_solver(
+            horizon,
+            mat_dyn_eq,  # functional constraint
+            mat_b_dyn_eq  # functional constraint
+            )
         pos_u = (1+horizon)*dim_sys-1
         return vec_x_u[pos_u:pos_u+self.obj_dyn.dim_u, 1]

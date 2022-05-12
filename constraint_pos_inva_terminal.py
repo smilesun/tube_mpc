@@ -5,7 +5,7 @@ from scipy.optimize import linprog
 from utils_plot_constraint import plot_polytope
 
 
-class PosInvaBuilder():
+class PosInvaTerminalSetBuilder():
     def __init__(self, mat_sys,
                  mat_state_constraint):
         self.mat_state_constraint = mat_state_constraint
