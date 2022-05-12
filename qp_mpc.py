@@ -9,8 +9,8 @@ def qp_x_u(mat_q, mat_r, mat_dyn_eq, mat_b_dyn_eq, mat_inf_pos_inva):
     P = np.block([[mat_q, np.zeros((mat_q.shape[0], mat_r.shape[1]))],
                   [np.zeros((mat_r.shape[0], mat_q.shape[1])), mat_r]])
 
-    quadprog_solve_qp(P=P, A_ub=mat_inf_pos_inva,
-                      b_ub=np.ones(mat_inf_pos_inva.shape[0]))
+    u = quadprog_solve_qp(P=P, A_ub=mat_inf_pos_inva, b_ub=np.ones(mat_inf_pos_inva.shape[0]))
+    return u
 
 
 class QP_MPC():
@@ -41,16 +41,28 @@ class QP_MPC():
     Inequality constraint
     [0, 0, M_{inf}, 0, 0] x < 1
     """
-    def __init__(self, obj_dyn, eq_constraint_builder):
+    def __init__(self, obj_dyn,
+                 eq_constraint_builder,
+                 inf_pos_inva_builder,
+                 mat_q, mat_r):
         """__init__.
         :param obj_dyn:
         """
         self.obj_dyn = obj_dyn
-        self.eq_constraint_builder = eq_constraint_builder
+        self.mat_q = mat_q
+        self.mat_r = mat_r
+        self.eq_constraint_builder = eq_constraint_builder()
+        self._mat_inf_pos_inva = inf_pos_inva_builder()
 
-    def __call__(self, x):
+    @property
+    def mat_inf_pos_inva(self):
+        return self._mat_inf_pos_inva
+
+    def __call__(self, x, horizon):
         """__call__.
         :param x: current state
         """
-        A_eq, b_eq = self.eq_constraint_builder()
+        mat_dyn_eq, mat_b_dyn_eq = self.eq_constraint_builder(x, horizon)
         # A_ub, b_ub = self.ub_constraint_builder()
+        u = qp_x_u(self.mat_q, self.mat_r, mat_dyn_eq, mat_b_dyn_eq, self.mat_inf_pos_inva)
+        return u

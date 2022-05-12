@@ -12,7 +12,7 @@ def test_stable_A():
         [1, 0],
         [-1, 0],
         [0, -1]])
-    constraint = iterate_invariance(mat0=M0, A=A, n_iter=10, call_back=plot_polytope)
+    # constraint = iterate_invariance(mat0=M0, A=A, n_iter=10, call_back=plot_polytope)
 
 
 def test_unstable_A():
@@ -22,4 +22,4 @@ def test_unstable_A():
         [1, 0],
         [-1, 0],
         [0, -1]])
-    constraint = iterate_invariance(mat0=M0, A=A, n_iter=5, call_back=plot_polytope)
+    # constraint = iterate_invariance(mat0=M0, A=A, n_iter=5, call_back=plot_polytope)
