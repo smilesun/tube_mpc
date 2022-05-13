@@ -14,3 +14,4 @@ def plot_polytope(A_ub, text="feasible", b_ub=None):
     ##
     list_vertices = lineqs(A_ub, b_ub, title=text)  # Note that lineqs uses >= convention
     plt.show()
+    return list_vertices

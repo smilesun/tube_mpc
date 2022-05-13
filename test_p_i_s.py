@@ -1,5 +1,5 @@
 import numpy as np
-from p_i_s import iterate_invariance
+from constraint_pos_inva_terminal import iterate_invariance
 from utils_plot_constraint import plot_polytope
 
 
@@ -12,7 +12,7 @@ def test_stable_A():
         [1, 0],
         [-1, 0],
         [0, -1]])
-    # constraint = iterate_invariance(mat0=M0, A=A, n_iter=10, call_back=plot_polytope)
+    constraint = iterate_invariance(mat0=M0, A=A, n_iter=10)
 
 
 def test_unstable_A():
@@ -22,4 +22,4 @@ def test_unstable_A():
         [1, 0],
         [-1, 0],
         [0, -1]])
-    # constraint = iterate_invariance(mat0=M0, A=A, n_iter=5, call_back=plot_polytope)
+    constraint = iterate_invariance(mat0=M0, A=A, n_iter=5)

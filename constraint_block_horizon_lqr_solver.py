@@ -155,7 +155,8 @@ class LqrQp():
         """
         block_mat_a_ub = block_mat_terminal_a
         block_mat_a_ub = np.vstack([block_mat_ub_state_a, block_mat_a_ub])
-        block_mat_a_ub = np.vstack([block_mat_ub_input_a, block_mat_ub_input_b])
+        block_mat_a_ub = np.vstack(
+            [block_mat_ub_input_a, block_mat_ub_input_b])
         """
         [block_m1,
          block_m2,
