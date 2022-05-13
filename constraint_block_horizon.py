@@ -65,19 +65,49 @@ class LqrQp():
         block_r = self.gen_loss_block_r(mat_r, horizon)
         return np.diag([block_q, block_r])
 
-    def gen_block_terminal_constraint(self, horizon):
+    def gen_block_terminal_state_inva_constraint(self, horizon):
         """
         positive invariant terminal set only need to apply on x_T
+        [0, 0, 0, P, |0, 0, 0] *
+        [x_{0:T-1}, x_T,  u_{0:T-1}]^T =Px_T<= ones(nrow(P),1)
         """
-        eye1 = np.zeros((horizon+1, horizon+1))
-        eye1[horizon, horizon] = 1   # x_{0:T}
-        block_mat_a_ub = np.kron(self.mat_terminal_inf_pos_inva, eye1)
+        block_one_hot = np.zeros((1, 2*horizon+1))
+        block_one_hot[horizon] = 1
+        block_mat_terminal_ub = np.kron(
+            self.mat_terminal_inf_pos_inva, block_one_hot)
+        block_b_terminal_ub = np.ones(
+            self.mat_terminal_inf_pos_inva.shape[0], 1)
+        return block_mat_terminal_ub, block_b_terminal_ub
+
+    def gen_block_terminal_state_control_coupling(self, horizon, k_riccati):
+        """
+        starting from x_N till infinity, supposed k_riccati is used, then
+        - k_riccati*x must be inside the control input
+        control constraint: for x_{T:inft}: C(Kx) <=1, how to ensure?
+        - next state must be inside terminal set(positive invariant):
+        x^+ = Ax + BKx = (A+BK)x must be inside positive invariant set
+        """
+        pass
+
+    def gen_block_control_stage_constraint(self, horizon):
+        """
+        # stage control constraint
+        Cu_0<=1
+        Cu_1<=1
+        Cu_T<=1:
+        C_block=
+        [0, 0, 0, 0, |C, 0, 0] [x_{0:T}, u_{0:T-1}]^T =Cu_0<= ones(nrow(C),1)
+        [0, 0, 0, 0, |0, C, 0] [x_{0:T}, u_{0:T-1}]^T =Cu_1<= ones(nrow(C),1)
+        [0, 0, 0, 0, |0, 0, C] [x_{0:T}, u_{0:T-1}]^T =Cu_{T-1}<= ones(nrow(C),1)
+        C_block[x_{0:T}, u_{0:T-1}]^T <= ones(T*nrow(C), 1)
+        """
+        nrow = self.mat_u_ub.shape[0]
+        zeros = np.zeros((horizon*nrow, (horizon+1)*self.dim_sys))
+        block_mat_diag = np.kron(self.mat_u_ub, np.eye(horizon))
+        block_mat4u = np.hstack([zeros, block_mat_diag])
         #
-        b_ub_block = np.zeros(horizon+1)
-        b_ub_block[horizon, 1] = 1
-        b_ub_local = np.ones((self.mat_terminal_inf_pos_inva.shape[0], 1))
-        block_mat_b_ub = np.kron(b_ub_local, b_ub_block)
-        return block_mat_a_ub, block_mat_b_ub
+        b_ub_global4u = np.ones((horizon*self.mat_u_ub.shape[0], 1))
+        return block_mat4u, b_ub_global4u
 
     def build_block_state_constraint(self, horizon):
         """
@@ -115,15 +145,17 @@ class LqrQp():
         """__call__."""
         block_mat_loss = self.gen_loss(self.mat_q, self.mat_r, horizon)
         block_mat_terminal_a, block_mat_terminal_b = \
-            self.gen_block_terminal_constraint(horizon)
+            self.gen_block_terminal_state_inva_constraint(horizon)
         block_mat_ub_state_a, block_mat_ub_state_b = \
             self.build_block_state_constraint(horizon)
+        block_mat_ub_input_a, block_mat_ub_input_b = \
+            self.gen_block_control_stage_constraint(horizon)
         """
         # there can be more inequality constraint than number of state!
         """
         block_mat_a_ub = block_mat_terminal_a
         block_mat_a_ub = np.vstack([block_mat_ub_state_a, block_mat_a_ub])
-        # block_mat_a_ub = np.vstack([block_mat_input_a, block_mat_a_ub])
+        block_mat_a_ub = np.vstack([block_mat_ub_input_a, block_mat_ub_input_b])
         """
         [block_m1,
          block_m2,
@@ -134,7 +166,7 @@ class LqrQp():
         #
         block_mat_b_ub = block_mat_terminal_b
         block_mat_b_ub = np.vstack([block_mat_ub_state_b, block_mat_b_ub])
-        #block_mat_b_ub = np.vstack([block_mat_input_b, block_mat_b_ub])
+        # block_mat_b_ub = np.vstack([block_mat_input_b, block_mat_b_ub])
 
         vec_x_u = quadprog_solve_qp(
             P=block_mat_loss,
