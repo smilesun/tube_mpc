@@ -21,13 +21,13 @@ def test_constraint_eq_dyn():
     assert mat.shape[0] == n*(horizon+1)
 
 def test_constraint_xu():
-    mat_x = np.matrix(
+    mat_x = np.array(
         [[2, -1],
          [0, 1],
          [1, 0],
          [0, -1]])
 
-    mat_u = np.matrix([[1]])
+    mat_u = np.array([[1]])
 
     obj = ConstraintStageXU(dim_sys=2, dim_input=1,
                             mat_x=mat_x,
