@@ -7,6 +7,7 @@ class ConstraintBlockHorizonTerminal():
     constraint constraint w.r.t x_T
     """
     def __init__(self, mat_terminal_inf_pos_inva,
+                 mat_x_u,
                  mat_state_ub,
                  mat_u_ub):
         """__init__.

@@ -2,23 +2,7 @@ import numpy as np
 from solver_quadprog import quadprog_solve_qp
 
 
-def qp_x_u_1step(mat_q, mat_r, mat_dyn_eq, mat_b_dyn_eq, mat_ub_inf_pos_inva):
-    """
-    decision variable: d=[x_{1:T}, u_{1:T}]^T
-    Loss: x^TQx+u^TRu = d^T[[Q,0], [0, R]]d
-    """
-    mat_loss = np.block([[mat_q, np.zeros((mat_q.shape[0], mat_r.shape[1]))],
-                         [np.zeros((mat_r.shape[0], mat_q.shape[1])), mat_r]])
-
-    vec_x_u = quadprog_solve_qp(P=mat_loss,
-                                A_ub=mat_ub_inf_pos_inva,
-                                b_ub=np.ones(mat_ub_inf_pos_inva.shape[0]),
-                                A_eq=mat_dyn_eq,
-                                b_eq=mat_b_dyn_eq)
-    return vec_x_u
-
-
-class LqrQp():
+class ConstraintHorizonBlockStageXU():
     """LqrQp.
     solving LQR problem with quadratic programming
     """
@@ -38,32 +22,54 @@ class LqrQp():
         self.dim_sys = self.mat_q.shape[0]
         self.dim_input = self.mat_r.shape[0]
 
-    def gen_loss_block_q(self, mat_q, horizon):
+    def gen_block_control_stage_constraint(self, horizon):
         """
-        - loss should be dynamically changed
-        - suppose horizon is T=3, decision variable x_{0:T}
-        0, 0, 0, 0
-        0, Q, 0, 0
-        0, 0, Q, 0
-        0, 0, 0, Q
+        # stage control constraint
+        Cu_0<=1
+        Cu_1<=1
+        Cu_T<=1:
+        C_block=
+        [0, 0, 0, 0, |C, 0, 0] [x_{0:T}, u_{0:T-1}]^T =Cu_0<= ones(nrow(C),1)
+        [0, 0, 0, 0, |0, C, 0] [x_{0:T}, u_{0:T-1}]^T =Cu_1<= ones(nrow(C),1)
+        [0, 0, 0, 0, |0, 0, C] [x_{0:T}, u_{0:T-1}]^T =Cu_{T-1}<= ones(nrow(C),1)
+        C_block[x_{0:T}, u_{0:T-1}]^T <= ones(T*nrow(C), 1)
         """
-        eye1 = np.eye(horizon+1)
-        eye1[0, 0] = 1.0
-        return np.kron(mat_q, eye1)
+        nrow = self.mat_u_ub.shape[0]
+        zeros = np.zeros((horizon*nrow, (horizon+1)*self.dim_sys))
+        block_mat_diag = np.kron(self.mat_u_ub, np.eye(horizon))
+        block_mat4u = np.hstack([zeros, block_mat_diag])
+        #
+        b_ub_global4u = np.ones((horizon*self.mat_u_ub.shape[0], 1))
+        return block_mat4u, b_ub_global4u
 
-    def gen_loss_block_r(self, mat_r, horizon):
+    def build_block_state_constraint(self, horizon):
         """
-        suppose horizon is T=3, decision variable x_{0:T}
-        R, 0, 0
-        0, R, 0
-        0, 0, R
+        Mx<=1
+        Mx_0<=1
+        Mx_T<=1:
+        M_block=
+        [0, 0, 0, 0, |0, 0, 0 # this line does not has to be added
+        ---------------------------------------------------------
+        [0, M, 0, 0, |0, 0, 0] [x_{0:T}, u_{0:T-1}]^T =Mx_1<= ones(nrow(M),1)
+        [0, 0, M, 0, |0, 0, 0] [x_{0:T}, u_{0:T-1}]^T =Mx_2<= ones(nrow(M),1)
+        [0, 0, 0, M, |0, 0, 0] [x_{0:T}, u_{0:T-1}]^T =Mx_T<= ones(nrow(M),1)
+        M_block[x_{0:T}, u_{0:T-1}]^T <= ones(dim(x)*T, 1)
         """
-        return np.kron(mat_r, np.eye(horizon))
-
-    def gen_loss(self, mat_q, mat_r, horizon):
-        block_q = self.gen_loss_block_q(mat_q, horizon)
-        block_r = self.gen_loss_block_r(mat_r, horizon)
-        return np.diag([block_q, block_r])
+        mat_block = np.eye(horizon+1)
+        mat_block[0, 0] = 0
+        block_mat_ub = np.kron(self.mat_state_ub, mat_block)
+        block_mat_ub = block_mat_ub[1:, :]  # drop the first row (all zero)
+        """
+        [0]_{nrow(M)[0], r}, [0]_{nrow(M)[0], r}, [0]_{nrow(M)[0], r}
+        [0]_{nrow(M)[0], r}, [0]_{nrow(M)[0], r}, [0]_{nrow(M)[0], r}
+        [0]_{nrow(M)[0], r}, [0]_{nrow(M)[0], r}, [0]_{nrow(M)[0], r}
+        """
+        block_zero = np.zeros((self.mat_state_ub.shape[0]*horizon,
+                               self.dim_input*horizon))
+        # block_zero = np.kron(np.zeros((horizon, horizon)),
+        block_mat_ub = np.hstack([block_mat_ub, block_zero])
+        block_b_ub = np.ones((self.mat_state_ub.shape[0]*horizon, 1))
+        return block_mat_ub, block_b_ub
 
     def __call__(self, horizon,
                  mat_dyn_eq,  # functional constraint
