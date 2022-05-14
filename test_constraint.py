@@ -2,6 +2,7 @@ import numpy as np
 from constraint_eq_ldyn import ConstraintEqLdyn
 from constraint_block_horizon_terminal import ConstraintBlockHorizonTerminal
 from constraint_x_u_couple import ConstraintStageXU
+from utils_case import Probset
 
 
 def test_constraint_eq_dyn():
@@ -21,16 +22,26 @@ def test_constraint_eq_dyn():
     assert mat.shape[0] == n*(horizon+1)
 
 def test_constraint_xu():
-    mat_x = np.array(
-        [[2, -1],
-         [0, 1],
-         [1, 0],
-         [0, -1]])
-
+    mat_x = Probset().x_only_constraint
     mat_u = np.array([[1]])
-
     obj = ConstraintStageXU(dim_sys=2, dim_input=1,
                             mat_x=mat_x,
                             mat_u=mat_u)
 
     assert np.all(obj.mat[:mat_x.shape[0], :mat_x.shape[1]] == mat_x)
+
+
+def test_constraint_terminal():
+    prob = Probset()
+    mat_x = prob.x_only_constraint
+    mat_u = np.array([[1]])
+    obj = ConstraintStageXU(prob.dim_sys,
+                            prob.dim_input,
+                            mat_x=mat_x,
+                            mat_u=mat_u)
+    horizon = 3
+    mat, vec_b = ConstraintBlockHorizonTerminal(obj,
+                                                mat_k=np.ones((1,1)),
+                                                mat_sys=prob.mat_sys,
+                                                mat_input=prob.mat_input)(horizon)
+    mat.shape[1] == prob.dim_sys*(horizon + 1) + prob.dim_input*horizon

@@ -7,7 +7,7 @@ class ConstraintStageXU():
     - to check if the user input constraint make sense by visualizing
     - for easy user input specification
     - to document the x and u constraint:
-    C^T x + D^Tu <=1 can be severl rows
+    C^T x + D^Tu <=1 can be several rows
     first row:
         c1x + 0u <=1 will be [c1_{nrow(c1)*n}, 0_{nrow(c1)*r] [x^T, u^T]^T <=1
     second row:
@@ -40,3 +40,8 @@ class ConstraintStageXU():
     @property
     def mat(self):
         return self._mat
+
+    def reduce2x(self):
+        #mat_x = self._mat[:, :self.dim_sys]
+        #mat_u = self._mat[:, self.dim_sys:]
+        np.vstack([])
