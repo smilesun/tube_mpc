@@ -1,5 +1,7 @@
 import numpy as np
 from solver_quadprog import quadprog_solve_qp
+from constraint_block_horizon_terminal import ConstraintBlockHorizonTerminal
+from constraint_block_horizon_stage_x_u import ConstraintHorizonBlockStageXU
 
 
 def qp_x_u_1step(mat_q, mat_r, mat_dyn_eq, mat_b_dyn_eq, mat_ub_inf_pos_inva):
@@ -22,21 +24,26 @@ class LqrQp():
     """LqrQp.
     solving LQR problem with quadratic programming
     """
-    def __init__(self, mat_terminal_inf_pos_inva,
-                 mat_state_ub,
-                 mat_u_ub,
-                 mat_q, mat_r):
+    def __init__(self, mat_q, mat_r,
+                 mat_k,
+                 mat_sys, mat_input,
+                 constraint_x_u):
         """__init__.
         :param mat_q:
         :param mat_r:
         """
-        self.mat_terminal_inf_pos_inva = mat_terminal_inf_pos_inva
         self.mat_q = mat_q
         self.mat_r = mat_r
-        self.mat_u_ub = mat_u_ub
-        self.mat_state_ub = mat_state_ub
         self.dim_sys = self.mat_q.shape[0]
         self.dim_input = self.mat_r.shape[0]
+        self.constraint_terminal = ConstraintBlockHorizonTerminal(
+            constraint_x_u,
+            mat_k=mat_k,
+            mat_sys=mat_sys,
+            mat_input=mat_input)
+        self.constraint_stage = ConstraintHorizonBlockStageXU(
+            mat_state_ub=constraint_x_u.mat_x,
+            mat_u_ub=constraint_x_u.mat_u)
 
     def gen_loss_block_q(self, mat_q, horizon):
         """
@@ -71,19 +78,19 @@ class LqrQp():
                  ):
         """__call__."""
         block_mat_loss = self.gen_loss(self.mat_q, self.mat_r, horizon)
+
         block_mat_terminal_a, block_mat_terminal_b = \
-            self.gen_block_terminal_state_inva_constraint(horizon)
-        block_mat_ub_state_a, block_mat_ub_state_b = \
-            self.build_block_state_constraint(horizon)
-        block_mat_ub_input_a, block_mat_ub_input_b = \
-            self.gen_block_control_stage_constraint(horizon)
+            self.constraint_terminal(horizon)
+
+        block_mat_stage_a, block_mat_stage_b = \
+            self.constraint_stage(horizon)
+
         """
         # there can be more inequality constraint than number of state!
         """
         block_mat_a_ub = block_mat_terminal_a
-        block_mat_a_ub = np.vstack([block_mat_ub_state_a, block_mat_a_ub])
-        block_mat_a_ub = np.vstack(
-            [block_mat_ub_input_a, block_mat_ub_input_b])
+        block_mat_a_ub = np.vstack([block_mat_stage_a,
+                                    block_mat_terminal_a])
         """
         [block_m1,
          block_m2,
@@ -91,10 +98,8 @@ class LqrQp():
                                            ones(2T+1, 1)^T,
                                            ones(2T+1, 1)^T]^T
         """
-        #
-        block_mat_b_ub = block_mat_terminal_b
-        block_mat_b_ub = np.vstack([block_mat_ub_state_b, block_mat_b_ub])
-        # block_mat_b_ub = np.vstack([block_mat_input_b, block_mat_b_ub])
+        block_mat_b_ub = np.vstack([block_mat_stage_b,
+                                    block_mat_terminal_b])
 
         vec_x_u = quadprog_solve_qp(
             P=block_mat_loss,
