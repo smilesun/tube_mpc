@@ -1,6 +1,7 @@
 import numpy as np
 from constraint_eq_ldyn import ConstraintEqLdyn
 from constraint_block_horizon_terminal import ConstraintBlockHorizonTerminal
+from constraint_block_horizon_stage_x_u import ConstraintHorizonBlockStageXU
 from constraint_x_u_couple import ConstraintStageXU
 from utils_case import Probset
 
@@ -48,3 +49,15 @@ def test_constraint_terminal():
         mat_input=prob.mat_input)
     mat, vec_b = constraint_terminal(horizon)
     assert mat.shape[1] == prob.dim_sys*(horizon + 1) + prob.dim_input*horizon
+
+def test_constraint_xu_stage_block():
+    prob = Probset()
+    mat_x = prob.x_only_constraint
+    mat_u = np.array([[1]])
+    obj = ConstraintStageXU(dim_sys=prob.dim_sys,
+                            dim_input=prob.dim_input,
+                            mat_x=mat_x,
+                            mat_u=mat_u)
+    constra = ConstraintHorizonBlockStageXU(mat_state_ub=obj.mat_x,
+                                  mat_u_ub=obj.mat_u)
+    mat, vec_b = constra(3)

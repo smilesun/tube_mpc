@@ -36,6 +36,8 @@ class ConstraintStageXU():
         if mat_xu is not None:
             mat_stack_xu = np.vstack([mat_stack_xu, mat_xu])
         self._mat = mat_stack_xu
+        self.mat_x = self._mat[:, :self.dim_sys]
+        self.mat_u = self._mat[:, self.dim_sys:]
 
     @property
     def mat(self):
@@ -47,6 +49,4 @@ class ConstraintStageXU():
         C^T x + D^TKx <=1
         (C^T + D^TK)x <=1
         """
-        mat_x = self._mat[:, :self.dim_sys]
-        mat_u = self._mat[:, self.dim_sys:]
-        return mat_x + np.matmul(mat_u, mat_k)
+        return self.mat_x + np.matmul(self.mat_u, mat_k)
