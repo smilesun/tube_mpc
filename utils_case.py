@@ -16,7 +16,7 @@ M0 = np.matrix([
 class Probset():
     @property
     def mat_sys(self):
-        mat = np.matrix([[1.1, 0.5], [0.5, 0.9]])
+        mat = np.array([[1.1, 0.5], [0.5, 0.9]])
         return mat
 
     @property
@@ -27,7 +27,7 @@ class Probset():
 
     @property
     def x_only_constraint(self):
-        mat_x = np.matrix([[2, -1],
+        mat_x = np.array([[2, -1],
                            [0, 1],
                            [1, 0],
                            [0, -1]])

@@ -25,12 +25,13 @@ class ConstraintBlockHorizonTerminal():
         """__init__.
         :param mat_q:
         """
+        self.dim_input = mat_input.shape[1]
         mat_state_constraint = constraint_x_u.reduce2x(mat_k)
         mat_sys_closed_loop = mat_sys + np.matmul(mat_input, mat_k)  # A+BK
         self.pos_inva = PosInvaTerminalSetBuilder(
             mat_sys_closed_loop,
             mat_state_constraint)
-        self.mat_term_inf_pos_inva_k = self.pos_inva(3)  # FIXME:
+        self.mat_term_inf_pos_inva_k = self.pos_inva(1)  # FIXME:
 
     def gen_block_terminal_state_inva_constraint(self, horizon):
         """
@@ -86,10 +87,17 @@ class ConstraintBlockHorizonTerminal():
         this class directly.
         """
 
-        block_one_hot = np.zeros((1, 2*horizon+1))
+        block_one_hot = np.zeros((1, horizon+1))
         block_one_hot[0, horizon] = 1
-        block_mat_terminal_ub = np.kron(
+        block_mat_terminal_x = np.kron(
             self.mat_term_inf_pos_inva_k, block_one_hot)
+        # FIXME: can not kroneck with x, not u!
+        nrow = block_mat_terminal_x.shape[0]
+        block_mat_terminal_u = np.kron(np.ones((nrow, self.dim_input)),
+                                       np.zeros((1, horizon)))
+        block_mat_terminal_ub = np.hstack([
+            block_mat_terminal_x,
+            block_mat_terminal_u])
         block_b_terminal_ub = np.ones(
             (self.mat_term_inf_pos_inva_k.shape[0], 1))
         return block_mat_terminal_ub, block_b_terminal_ub

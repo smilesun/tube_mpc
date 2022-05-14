@@ -40,8 +40,11 @@ def test_constraint_terminal():
                             mat_x=mat_x,
                             mat_u=mat_u)
     horizon = 3
-    mat, vec_b = ConstraintBlockHorizonTerminal(obj,
-                                                mat_k=np.ones((1,1)),
-                                                mat_sys=prob.mat_sys,
-                                                mat_input=prob.mat_input)(horizon)
-    mat.shape[1] == prob.dim_sys*(horizon + 1) + prob.dim_input*horizon
+    # [A_{n*n}+B_{n*r}K_{r*n}]X_{n*1}
+    constraint_terminal = ConstraintBlockHorizonTerminal(
+        obj,
+        mat_k=np.ones((1, 2)),
+        mat_sys=prob.mat_sys,
+        mat_input=prob.mat_input)
+    mat, vec_b = constraint_terminal(horizon)
+    assert mat.shape[1] == prob.dim_sys*(horizon + 1) + prob.dim_input*horizon

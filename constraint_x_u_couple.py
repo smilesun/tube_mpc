@@ -41,7 +41,12 @@ class ConstraintStageXU():
     def mat(self):
         return self._mat
 
-    def reduce2x(self):
-        #mat_x = self._mat[:, :self.dim_sys]
-        #mat_u = self._mat[:, self.dim_sys:]
-        np.vstack([])
+    def reduce2x(self, mat_k):
+        """
+        C^T x + D^Tu <=1
+        C^T x + D^TKx <=1
+        (C^T + D^TK)x <=1
+        """
+        mat_x = self._mat[:, :self.dim_sys]
+        mat_u = self._mat[:, self.dim_sys:]
+        return mat_x + np.matmul(mat_u, mat_k)
