@@ -19,6 +19,37 @@ class PosInvaTerminalSetBuilder():
         return mat_reach_constraint
 
 
+def is_set_in_half_plane(mat_poly_set, half_plane_le,
+                         b_ub=None,
+                         fun_criteria=lambda x: x < 1):
+    """
+    polyhedra set is specified by np.matmul(mat_poly_set, x) <= 1
+    c @ x
+    such that::
+    A_ub @ x <= b_ub
+    A_eq @ x == b_eq
+    lb <= x <= ub
+    """
+    # ub:upper bound
+    if b_ub is None:
+        b_ub = 1.0 * np.ones(mat_poly_set.shape[0])
+    # FIXME: b_ub should be consistent with mat_poly_set
+
+    min_neg = linprog(
+        -1.0*half_plane_le,  # convert to maximize
+        A_ub=mat_poly_set,
+        # FIXME: not K-step backward reachability constraint matrix!
+        b_ub=b_ub)
+
+    max_val = -1.0 * min_neg.fun  # max value of original problem
+
+    if fun_criteria(max_val):
+        # if worst case satisfies constraint, then no need for this constraint
+        # to exist
+        return True
+    return False
+
+
 def augment_mat_k(mat_sys, mat_k, mat0,
                   fun_criteria=lambda x: x < 1,
                   call_back=None):
@@ -36,28 +67,33 @@ def augment_mat_k(mat_sys, mat_k, mat0,
     mat_candidate = np.matmul(mat_k, mat_sys)   # M_k*(Ax)<=1
     nrow = mat_candidate.shape[0]
     for i in range(nrow):
-        row = -1 * mat_candidate[i, ]  # FIXME: default linprog minimize, here maximize needed
-        # ub:upper bound
-        b_ub = 1.0 * np.ones(mat_kp1.shape[0])  # FIXME: this line should be inside for loop, mat_kp1 not mat_k!
-        res = linprog(row,
-                      A_ub=mat_kp1,  # FIXME: not mat_k!
-                      b_ub=b_ub)
-        max_val = res.fun
-        if fun_criteria(max_val):  # if worst case satisfies constraint, then no need for this constraint to exist
-            mat_kp1 = np.vstack((mat_kp1, row))   # FIXME: not stack M0!
+        row = mat_candidate[i, ]
+        if is_set_in_half_plane(mat_kp1, row):
+            mat_kp1 = np.vstack((mat_kp1, row))
+            # FIXME: not stack M0!
             if call_back:
                 call_back(mat_kp1, "the %d th row: %s" % (i, str(row)))
-    return mat_kp1 # FIXME:  return should be outside for loop!
+    return mat_kp1  # FIXME:  return should be outside for loop!
+
 
 def test_augment_mat_k():
-    from script_input import M0, A
-    augment_mat_k(M0, M0, A)
+    A = np.matrix([[1.1, 0.5], [0.5, 0.9]])
+    np.linalg.eig(A)
+    M0 = np.matrix(
+        [[0, 1],
+         [1, 0],
+         [-1, 0],
+         [0, -1]])
+    augment_mat_k(mat_k=M0, mat0=M0, mat_sys=A)
 
 
 def iterate_invariance(mat0, A, n_iter=10, verbose=True, call_back=None):
     mat_k_backstep = mat0
     for k in range(n_iter):
-        mat_k_backstep = augment_mat_k(mat_k=mat_k_backstep, mat0=mat0, mat_sys=A, call_back=call_back)
+        mat_k_backstep = augment_mat_k(mat_k=mat_k_backstep,
+                                       mat0=mat0,
+                                       mat_sys=A,
+                                       call_back=call_back)
         if verbose:
             print("iteration %d" % (k))
             print(mat_k_backstep)
@@ -66,8 +102,19 @@ def iterate_invariance(mat0, A, n_iter=10, verbose=True, call_back=None):
     return mat_k_backstep
 
 def test_iterate_invariance():
-    from script_input import M0, A
+    #  A = np.matrix([[0.3, 0.5], [0.5, 0.3]])
+    #  # A is stable, so one step reach invariant
+    #  initial set is maximum
+    A = np.matrix([[1.1, 0.5], [0.5, 0.9]])
+    np.linalg.eig(A)
+    M0 = np.matrix(
+        [[0, 1],
+         [1, 0],
+         [-1, 0],
+         [0, -1]])
     plot_polytope(M0)
-    constraint = iterate_invariance(mat0=M0, A=A, n_iter=3, call_back=plot_polytope)
-    constraint = iterate_invariance(mat0=M0, A=A, n_iter=100)
+    constraint = iterate_invariance(mat0=M0, A=A, n_iter=3,
+                                    call_back=plot_polytope)
+    constraint = iterate_invariance(mat0=M0, A=A, n_iter=20)
+    constraint = iterate_invariance(mat0=M0, A=A, n_iter=30)
     plot_polytope(constraint)

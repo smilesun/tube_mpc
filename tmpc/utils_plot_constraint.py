@@ -2,6 +2,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 from intvalpy import lineqs
 
+
+class PolyView():
+    def __init__(self):
+        plt.figure()
+        plt.show()
+
+
 def plot_polytope(A_ub, text="feasible", b_ub=None):
     """plot_polytope.
     :param A_ub: A_ub*x <= b_ub
