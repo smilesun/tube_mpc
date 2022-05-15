@@ -1,5 +1,5 @@
 import numpy as np
-from solver_quadprog import quadprog_solve_qp
+from tmpc.solver_quadprog import quadprog_solve_qp
 
 
 class ConstraintHorizonBlockStageXU():

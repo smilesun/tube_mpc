@@ -1,5 +1,5 @@
 import numpy as np
-from constraint_state import get_constraint_state
+from tmpc.constraint_state import get_constraint_state
 
 
 class DynSysL():

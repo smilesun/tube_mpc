@@ -1,6 +1,6 @@
 import numpy as np
-from constraint_pos_inva_terminal import iterate_invariance
-from utils_plot_constraint import plot_polytope
+from tmpc.constraint_pos_inva_terminal import iterate_invariance
+from tmpc.utils_plot_constraint import plot_polytope
 
 
 def test_stable_A():

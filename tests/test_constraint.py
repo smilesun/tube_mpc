@@ -1,9 +1,10 @@
+import pytest
 import numpy as np
-from constraint_eq_ldyn import ConstraintEqLdyn
-from constraint_block_horizon_terminal import ConstraintBlockHorizonTerminal
-from constraint_block_horizon_stage_x_u import ConstraintHorizonBlockStageXU
-from constraint_x_u_couple import ConstraintStageXU
-from utils_case import Probset
+from tmpc.constraint_eq_ldyn import ConstraintEqLdyn
+from tmpc.constraint_block_horizon_terminal import ConstraintBlockHorizonTerminal
+from tmpc.constraint_block_horizon_stage_x_u import ConstraintHorizonBlockStageXU
+from tmpc.constraint_x_u_couple import ConstraintStageXU
+from tmpc.utils_case import Probset
 
 
 def test_constraint_eq_dyn():

@@ -1,7 +1,7 @@
 import numpy as np
-from constraint_pos_inva_terminal import PosInvaTerminalSetBuilder
-from constraint_eq_ldyn import ConstraintEqLdyn
-from constraint_block_horizon_lqr_solver import LqrQp
+from tmpc.constraint_pos_inva_terminal import PosInvaTerminalSetBuilder
+from tmpc.constraint_eq_ldyn import ConstraintEqLdyn
+from tmpc.constraint_block_horizon_lqr_solver import LqrQp
 
 
 class MPCqp():

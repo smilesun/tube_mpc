@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from control import matlab
 from scipy.optimize import linprog
-from utils_plot_constraint import plot_polytope
+from tmpc.utils_plot_constraint import plot_polytope
 
 
 class PosInvaTerminalSetBuilder():

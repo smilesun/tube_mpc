@@ -1,7 +1,7 @@
 import numpy as np
-from constraint_x_u_couple import ConstraintStageXU
-from utils_case import Probset
-from mpc_qp import MPCqp
+from tmpc.constraint_x_u_couple import ConstraintStageXU
+from tmpc.utils_case import Probset
+from tmpc.mpc_qp import MPCqp
 
 
 def test_mpc():

@@ -1,6 +1,6 @@
 import numpy as np
-from constraint_x_u_couple import ConstraintStageXU
-from constraint_pos_inva_terminal import PosInvaTerminalSetBuilder
+from tmpc.constraint_x_u_couple import ConstraintStageXU
+from tmpc.constraint_pos_inva_terminal import PosInvaTerminalSetBuilder
 
 
 class ConstraintBlockHorizonTerminal():

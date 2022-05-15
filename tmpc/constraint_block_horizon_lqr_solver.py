@@ -1,8 +1,8 @@
 import numpy as np
 import scipy
-from solver_quadprog import quadprog_solve_qp
-from constraint_block_horizon_terminal import ConstraintBlockHorizonTerminal
-from constraint_block_horizon_stage_x_u import ConstraintHorizonBlockStageXU
+from tmpc.solver_quadprog import quadprog_solve_qp
+from tmpc.constraint_block_horizon_terminal import ConstraintBlockHorizonTerminal
+from tmpc.constraint_block_horizon_stage_x_u import ConstraintHorizonBlockStageXU
 
 
 def qp_x_u_1step(mat_q, mat_r, mat_dyn_eq, mat_b_dyn_eq, mat_ub_inf_pos_inva):
