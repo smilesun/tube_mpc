@@ -59,4 +59,5 @@ class MPCqp():
             mat_b_dyn_eq  # functional constraint
             )
         pos_u = (1+horizon)*dim_sys-1
-        return vec_x_u[pos_u:pos_u+self.dim_input, 1]
+        vec_u = vec_x_u[pos_u:pos_u+self.dim_input]
+        return vec_u.reshape((len(vec_u), 1))

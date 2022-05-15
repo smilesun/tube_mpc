@@ -17,7 +17,7 @@ import numpy as np
 class Probset():
     @property
     def x_init(self):
-        return np.array([[0.5], [0.5]])
+        return np.array([[0.], [0.]])
 
     @property
     def dim_sys(self):
