@@ -18,7 +18,11 @@ def test_constraint_eq_dyn():
     mat, b = constraint(x, horizon)
     mat.shape
     b.shape
-    assert mat.shape[1] == b.shape[0]
+    assert mat.shape[0] == b.shape[0]
+    # x0=x
+    # x1=Ax0+bu0
+    # x2=
+    # x3
     assert mat.shape[1] == horizon * (n+r) + n
     assert mat.shape[0] == n*(horizon+1)
 

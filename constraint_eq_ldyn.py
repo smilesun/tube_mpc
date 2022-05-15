@@ -46,24 +46,29 @@ class ConstraintEqLdyn():
 
     def __call__(self, x, horizon):
         """__call__.
-    Md= [I_{n},  [0]_n,  [0]_n,  [0]_n,|[0]_n,     [0]_n,         [0]_n] d =x
+    Md= [I_{n},  [0]_n,  [0]_n,  [0]_n,|[0]_{n*r}, [0]_{n*r}, [0]_{n*r}] d =x
         ---------------------------------------------------------------------
-        [A_{n}, -[I]_n,  [0]_n,  [0]_n,|[B]_{n*r}, [0]_n,         [0]_n] d =0
-        [0_{n},  [A]_n, -[I]_n,  [0]_n,|[0]_n,     [B]_{n*r},     [0]_n] d =0
-        [0_{n},  [0]_n,  [A]_n, -[I]_n,|[0]_n,     [0]_n,     [B]_{n*r}] d =0
+        [A_{n}, -[I]_n,  [0]_n,  [0]_n,|[B]_{n*r}, [0]_{n*r}, [0]_{n*r}] d =0
+        [0_{n},  [A]_n, -[I]_n,  [0]_n,|[0]_{n*r}, [B]_{n*r}, [0]_{n*r}] d =0
+        [0_{n},  [0]_n,  [A]_n, -[I]_n,|[0]_{n*r}, [0]_{n*r}, [B]_{n*r}] d =0
         :param x: current state
         """
         n = x.shape[0]
-        x = x.reshape(n, 1)
+        x = x.reshape(n, 1)   # FIXME: do we need this?
         r = self.dim_input
         assert n == self.dim_sys
-        mat_1_zero = np.zeros((n, horizon*(n+r)))
-        mat_1 = np.hstack([np.eye(n), mat_1_zero])
-        mat_2 = self.build_block_A(horizon, n, r)
-        mat_2 += self.build_block_b(horizon, n)
-        mat_2 += self.build_block_eye(horizon, n, r)
-        mat_lhs = np.vstack([mat_1, mat_2])
-        mat_rhs = np.vstack([x, np.zeros((horizon*(n+r), 1))])
+
+        # Md= [I_{n},[0]_n,[0]_n,[0]_n,|[0]_{n*r},[0]_{n*r},[0]_{n*r}] d =x
+        mat_init_block_zero = np.zeros((n, horizon*(n+r)))
+        mat_init_block = np.hstack([np.eye(n), mat_init_block_zero])
+
+        mat_block_a = self.build_block_A(horizon, n, r)
+        mat_block_b = self.build_block_b(horizon, n)
+        mat_block_eye = self.build_block_eye(horizon, n, r)
+        mat_block = mat_block_a + mat_block_b + mat_block_eye
+        #
+        mat_lhs = np.vstack([mat_init_block, mat_block])
+        mat_rhs = np.vstack([x, np.zeros((horizon*(n), 1))])  # equality constraint is w.r.t. x, not u, not n+r
         return mat_lhs, mat_rhs
 
     def build_block_eye(self, horizon, n, r):

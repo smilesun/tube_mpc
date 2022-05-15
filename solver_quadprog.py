@@ -15,7 +15,9 @@ def quadprog_solve_qp(P, A_ub, b_ub, A_eq=None, b_eq=None, q=None):
     :param A_eq:
     :param b_eq:
     The code below converts the above parameters to the follwing problem:
-    quadprog.solve_qp(mat_pos_def, qp_a, qp_C, qp_b, meq)[0]
+    quadprog.solve_qp(mat_pos_def, qp_lin_cost_vec_row,
+                      qp_constraint_mat_transpose,
+                      qp_constraint_rhs_vec_row, num_eq)[0]
     Minimize     1/2 x^T G x - a^T x
     Subject to   C.T x >= b
     <=>   -C.T x <= -b
@@ -31,29 +33,39 @@ def quadprog_solve_qp(P, A_ub, b_ub, A_eq=None, b_eq=None, q=None):
             quadratic function
         b : array, shape=(m), default=None
             vector defining the constraints
-        meq : int, default=0
-            the first meq constraints are treated as equality constraints,
+        num_eq : int, default=0
+            the first num_eq constraints are treated as equality constraints,
             all further as inequality constraints (defaults to 0).
             """
     mat_pos_def = .5 * (P + P.T)   # make sure P is symmetric
-    if A_eq is None:
-        A_eq = np.zeros_like(A_ub)
-    if b_eq is None:
-        b_eq = np.zeros_like(b_ub)
+    list_mat = []
+    list_rhs = []
+    num_eq = 0
+    if A_eq is not None:
+        list_mat.append(A_eq)
+        num_eq = A_eq.shape[0]
+    list_mat.append(A_ub)
+    if b_eq is not None:
+        list_rhs.append(b_eq)
+    list_rhs.append(b_ub)
     if q is None:
         q = np.zeros(P.shape[0])
-    qp_a = -1.0 * q
-    qp_C = -1.0 * numpy.vstack([A_eq, A_ub]).T
-    qp_b = -1.0 * numpy.hstack([b_eq, b_ub])
-    meq = A_eq.shape[0]
-    return quadprog.solve_qp(mat_pos_def, qp_a, qp_C, qp_b, meq)[0]
+    qp_lin_cost_vec_row = -1.0 * q
+    qp_constraint_mat_transpose = -1.0 * numpy.vstack(list_mat).T
+    qp_constraint_rhs_vec_row = -1.0 * numpy.vstack(list_rhs).T.squeeze()
+    rst = quadprog.solve_qp(mat_pos_def,
+                            qp_lin_cost_vec_row,
+                            qp_constraint_mat_transpose,
+                            qp_constraint_rhs_vec_row,
+                            num_eq)
+    return rst[0]
 
 
 def test_qp():
     M = np.array([[1., 2., 0.], [-8., 3., 2.], [0., 1., 1.]])
     P = np.dot(M.T, M)
-    A_ub = np.array([[1., 2., 1.], [2., 0., 1.], [-1., 2., -1.]])
-    b_ub = np.array([3., 2., -2.])
+    A_ub = np.array([[1., 2., 1.], [2., 0., 1.], [-1., 2., -1.], [0, 0, 0.01]])
+    b_ub = np.array([3., 2., -2., 1]).reshape((4, 1))
     quadprog_solve_qp(P=P, A_ub=A_ub, b_ub=b_ub)
     q = -np.dot(M.T, np.array([3., 2., 3.]))
     quadprog_solve_qp(P=P, A_ub=A_ub, b_ub=b_ub, q=q)

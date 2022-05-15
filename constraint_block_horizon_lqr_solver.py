@@ -1,4 +1,5 @@
 import numpy as np
+import scipy
 from solver_quadprog import quadprog_solve_qp
 from constraint_block_horizon_terminal import ConstraintBlockHorizonTerminal
 from constraint_block_horizon_stage_x_u import ConstraintHorizonBlockStageXU
@@ -70,7 +71,7 @@ class LqrQp():
     def gen_loss(self, mat_q, mat_r, horizon):
         block_q = self.gen_loss_block_q(mat_q, horizon)
         block_r = self.gen_loss_block_r(mat_r, horizon)
-        return np.diag([block_q, block_r])
+        return scipy.linalg.block_diag(block_q, block_r)
 
     def __call__(self, horizon,
                  mat_dyn_eq,  # functional constraint
@@ -100,7 +101,6 @@ class LqrQp():
         """
         block_mat_b_ub = np.vstack([block_mat_stage_b,
                                     block_mat_terminal_b])
-
         vec_x_u = quadprog_solve_qp(
             P=block_mat_loss,
             A_ub=block_mat_a_ub,
