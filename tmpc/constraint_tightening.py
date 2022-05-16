@@ -58,11 +58,33 @@ h(S_k, M[i,:]):= max_{s_k \\in S_k} {M[i,:]s_k}
 ensuring x_k \\in X_k is transformed to
 M[i,:]*z_k+ h(S_k, M[i,:])<=1
 <=>M[i,:]*z_k <=1-h(S_{k}, M[i,:])<=1-h(S_{\infty}, M[i,:])
+
+# Decomposition of S_{\infty}:
+- S_{\infty} \approx  \hat{S, \alpha} = \minkowski_sum_{i=0:k_{\alpha}-1}(A+BK^{s})^i*W where \alpha has
+relation to the spectral radius
+- h(\hat{S}, q)= \sum_{j=0:k_{\alpha}-1}h(W, [(A+BK^{s})^j]^T*q)
 """
+import numpy as np
 
 
 def fun_support(mat_set, vec_q):
     pass
+
+
+
+def fun_support_decomp(mat_set, mat_sys, mat_input, mat_k_s, vec_q, j_power):
+    mat_a_c = mat_sys + np.matmul(mat_input, mat_k_s)
+    mat_a_c_j = np.linalg.matrix_power(mat_a_c, j_power)
+    vec_direction = np.matlmul(mat_a_c_j.T, vec_q)
+    return fun_support(mat_set, vec_direction)
+
+def fun_support_minkow_sum(mat_set, mat_sys, mat_input, mat_k_s, vec_q, k_alpha):
+    max_val = 0
+    for j in range(k_alpha):
+        max_val += fun_support_decomp(mat_set, mat_sys, mat_input, mat_k_s, vec_q, j)
+    return max_val
+
+
 
 
 def is_in_minkowski_sum(mat_set_1, mat_set_2):
@@ -80,18 +102,28 @@ def is_in_minkowski_sum(mat_set_1, mat_set_2):
 
 class ConstraintTightening():
     """
+
+    ##################################
+    $z_0$ constraint:
     S_k= \minkowski_sum_{i=0:k-1}(A+BK^{s})^i*W
     to judge if s_k \\ in S_k
+    (Note S_k is pre-stabalized, by choosing K^{s}, so A+BK^{s} is hurwitz)
     <=>
     there exist w_{0:k-1}, s.t.
     - s_k = \sum_{i=0:k-1}(A+BK^{s})^i*w_i, equality constraint
     - w_i \in W  or mat_disturbance * w_i <= 1
+
+    # state tubes:
+    X_0={z_0}+S, X_1={z_1}+S, ..., X_T={z_T}+S  # minkowski sum
+
+    # control tubes:
+    {v_0} + K^{s}*S,  {v_1} + K^{s}*S, ..., {v_T} + K^{s}*S,
     #
-    x_k = z_k + s_k \\in X_k \\ in X
-    so s_k = x_k - z_k where z_k is the decision variable
+    #x_k = z_k + s_k \\in X_k \\ in X
+    #so s_k = x_k - z_k where z_k is the decision variable
     #
-    s_k = x_k - z_k
-    s_{k} = (A+BK^{s})s_{k-1} + w_{k-1}
+    #s_k = x_k - z_k
+    #s_{k} = (A+BK^{s})s_{k-1} + w_{k-1}
     """
     def __init__(self, mat_m4x, mat_disturbance):
         self.mat_m4x = mat_m4x
