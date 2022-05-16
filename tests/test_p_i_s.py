@@ -12,7 +12,7 @@ def test_stable_A():
         [1, 0],
         [-1, 0],
         [0, -1]])
-    constraint = iterate_invariance(mat0=M0, A=A, n_iter=10)
+    constraint = iterate_invariance(mat0=M0, A=A, n_iter=10, tolerance=0)
 
 
 def test_unstable_A():
@@ -22,4 +22,4 @@ def test_unstable_A():
         [1, 0],
         [-1, 0],
         [0, -1]])
-    constraint = iterate_invariance(mat0=M0, A=A, n_iter=5)
+    constraint = iterate_invariance(mat0=M0, A=A, n_iter=5, tolerance=0)
