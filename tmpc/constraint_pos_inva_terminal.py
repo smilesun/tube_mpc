@@ -6,12 +6,23 @@ from tmpc.utils_plot_constraint import plot_polytope
 
 
 class PosInvaTerminalSetBuilder():
+    """PosInvaTerminalSetBuilder."""
+
     def __init__(self, mat_sys,
                  mat_state_constraint):
+        """__init__.
+
+        :param mat_sys:
+        :param mat_state_constraint:
+        """
         self.mat_state_constraint = mat_state_constraint
         self.mat_sys = mat_sys
 
     def __call__(self, n_iter):
+        """__call__.
+
+        :param n_iter:
+        """
         mat_reach_constraint = iterate_invariance(
             mat0=self.mat_state_constraint,
             A=self.mat_sys,
@@ -77,6 +88,7 @@ def augment_mat_k(mat_sys, mat_k, mat0,
 
 
 def test_augment_mat_k():
+    """test_augment_mat_k."""
     A = np.matrix([[1.1, 0.5], [0.5, 0.9]])
     np.linalg.eig(A)
     M0 = np.matrix(
@@ -88,8 +100,16 @@ def test_augment_mat_k():
 
 
 def iterate_invariance(mat0, A, n_iter=10, verbose=True, call_back=None):
+    """iterate_invariance.
+    :param mat0:
+    :param A:
+    :param n_iter: maximum number of iterations
+    :param verbose:
+    :param call_back:
+    """
     mat_k_backstep = mat0
     for k in range(n_iter):
+        mat_k_old = mat_k_backstep
         mat_k_backstep = augment_mat_k(mat_k=mat_k_backstep,
                                        mat0=mat0,
                                        mat_sys=A,
@@ -99,9 +119,25 @@ def iterate_invariance(mat0, A, n_iter=10, verbose=True, call_back=None):
             print(mat_k_backstep)
         if call_back:
             call_back(mat_k_backstep, "iteration %d" % (k))
+        if fun_is_set_include(mat_k_backstep, mat_k_old):
+            print("inverse inclusion detected")
+            break
     return mat_k_backstep
 
+
+def fun_is_set_include(mat_set1, mat_set2):
+    """
+    mat_set1 \\in mat_set2
+    """
+    for i in range(mat_set1.shape[0]):
+        half_plane_le = mat_set1[i]
+        if is_set_in_half_plane(mat_set2, half_plane_le):
+            return False
+    return True
+
+
 def test_iterate_invariance():
+    """test_iterate_invariance."""
     #  A = np.matrix([[0.3, 0.5], [0.5, 0.3]])
     #  # A is stable, so one step reach invariant
     #  initial set is maximum
