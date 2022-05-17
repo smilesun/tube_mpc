@@ -118,6 +118,10 @@ class ConstraintSAlpha():
 
     def cal_power_given_alpha(self, alpha):
         """cal_power_given_alpha."""
+        self._alpha = alpha
+        j_power = 30  # FIXME
+        self.verify_inclusion(alpha, j_power)
+        return j_power
 
     def verify_inclusion(self, alpha, j_power):
         """
