@@ -1,19 +1,24 @@
 """
-# Let subscript denote time index
+# Disturbed system dynamic
+
+Let subscript denote time index:
 x_{k+1} = Ax_k+Bu_k+w_k
-where
-- w_k is disturbance, w_k \\in W where W is a bounded(compact)
-disturbance set
+where,
+- w_k is disturbance, w_k \\in W where W is a bounded(compact) disturbance set
 - x_k \\in X_k  is the constraint of state
 
 
 # Decompose the system into nominal part and disturbance part
+
 x_k = z_k + s_k
 
-## Note s_k != w_k, since w_k \\in W is bounded, but s_k \\ S_k can grow.
+!!!! Note s_k != w_k, since w_k \\in W is bounded, but s_k \\ S_k can grow, s_k
+reflect aggregated effect of disturbance up to the current step. s_k is a state
+variable
 
 z_{k+1} = Az_k + Bv_k = Az_{k} + BK^{z}*z_{k} = (A+BK^{z})z_{k}
-u_k = v_k + K^{s}*s_k
+u_k = v_k + K^{s}*s_k    (note s_k is a state variable of aggregated effect of
+disturbance)
 
 # Develop the dynamic of disturbance
 
@@ -35,13 +40,14 @@ define S_{0}= W
 S_k= \minkowski_sum_{i=0:k-1}(A+BK^{s})^i*W
 
 If one can calculate S_{\infty}, then we know the worse case disturbance
-x_k = z_k + s_k, if know the worst s_k, then we know how to constraint z_k
+x_k = z_k + s_k, if we know the worst s_k, then we know how to constraint z_k
 from the set perspective,
 X_k = Z_k + S_k  # minkowski sum
 we need a minkowski substraction
 Z_k = X_k - S_k \\in X_k - S_{\infty} = {Z_k}^{worst}
 
 # How to define {Z_k}^{worst}?
+Suppose the constraint for x_k is Mx_k<=1
 X_k = {x: x=z_k+s_k, z_k \\in Z_k, s_k \\ in S_{\infty}}
 x \\in X_k for each time step $k$ <=> Mx_k<=1
 <=>M(z_k+s_k)<=1
@@ -52,79 +58,38 @@ x \\in X_k for each time step $k$ <=> Mx_k<=1
 M[i,:]*z_k+ max_{s_k}[M[i,:]*s_k]<=1
 <=>
 M[i,:]*z_k+ h(S_k, M[i,:])<=1
-where
+where,
 h(S_k, M[i,:]):= max_{s_k \\in S_k} {M[i,:]s_k}
-# finally
+finally,
 ensuring x_k \\in X_k is transformed to
 M[i,:]*z_k+ h(S_k, M[i,:])<=1
 <=>M[i,:]*z_k <=1-h(S_{k}, M[i,:])<=1-h(S_{\infty}, M[i,:])
 
-# Decomposition of S_{\infty}:
-- S_{\infty} \approx  \hat{S, \alpha} = \minkowski_sum_{i=0:k_{\alpha}-1}(A+BK^{s})^i*W where \alpha has
-relation to the spectral radius
-- h(\hat{S}, q)= \sum_{j=0:k_{\alpha}-1}h(W, [(A+BK^{s})^j]^T*q)
+# How to calculate h(S_{\\infty}, M[i,:])?
 """
 import numpy as np
 
 
-def fun_support(mat_set, vec_q):
-    pass
-
-
-
-def fun_support_decomp(mat_set, mat_sys, mat_input, mat_k_s, vec_q, j_power):
-    mat_a_c = mat_sys + np.matmul(mat_input, mat_k_s)
-    mat_a_c_j = np.linalg.matrix_power(mat_a_c, j_power)
-    vec_direction = np.matlmul(mat_a_c_j.T, vec_q)
-    return fun_support(mat_set, vec_direction)
-
-def fun_support_minkow_sum(mat_set, mat_sys, mat_input, mat_k_s, vec_q, k_alpha):
-    max_val = 0
-    for j in range(k_alpha):
-        max_val += fun_support_decomp(mat_set, mat_sys, mat_input, mat_k_s, vec_q, j)
-    return max_val
-
-
-
-
-def is_in_minkowski_sum(mat_set_1, mat_set_2):
-    """
-    x \\in set_1 + set_2
-    <=>
-    exist x_1 + x_2 = x, s.t. x_1 \\in set_1, x_2\\in set_2
-    decision variable x_1, x_2
-    constraint:
-        x_1 + x_2 = x   # equality constraint
-        mat_set_1 x_1 <= 1  # upper bound
-        mat_set_2 x_2 <= 1  # upper bound
-    """
-
-
 class ConstraintTightening():
     """
-
-    ##################################
-    $z_0$ constraint:
-    S_k= \minkowski_sum_{i=0:k-1}(A+BK^{s})^i*W
-    to judge if s_k \\ in S_k
-    (Note S_k is pre-stabalized, by choosing K^{s}, so A+BK^{s} is hurwitz)
-    <=>
-    there exist w_{0:k-1}, s.t.
-    - s_k = \sum_{i=0:k-1}(A+BK^{s})^i*w_i, equality constraint
-    - w_i \in W  or mat_disturbance * w_i <= 1
-
-    # state tubes:
-    X_0={z_0}+S, X_1={z_1}+S, ..., X_T={z_T}+S  # minkowski sum
-
-    # control tubes:
-    {v_0} + K^{s}*S,  {v_1} + K^{s}*S, ..., {v_T} + K^{s}*S,
     #
-    #x_k = z_k + s_k \\in X_k \\ in X
-    #so s_k = x_k - z_k where z_k is the decision variable
-    #
-    #s_k = x_k - z_k
-    #s_{k} = (A+BK^{s})s_{k-1} + w_{k-1}
+    M[i,:]*z_k <=1-h(S_{k}, M[i,:])<=1-h(S_{\infty}, M[i,:])
     """
-    def __init__(self, mat_m4x, mat_disturbance):
+    def __init__(self, mat_m4x, support_decomp):
         self.mat_m4x = mat_m4x
-        self.mat_disturbance = mat_disturbance   # w_k \\in W
+        self.k_alpha = 4
+        self.support_decomp = support_decomp
+
+    def _handle_ith_row(self, i):
+        vec_q = self.mat_m4x[i, :]
+        h_support = self.support_decomp.fun_support_minkow_sum(
+            vec_q, self.k_alpha)
+        return vec_q / (1-h_support)
+
+    def __call__(self):
+        list_mat4z = []
+        for i in range(self.mat_m4x.shape[0]):
+            row = self._handle_ith_row(i)
+            list_mat4z.append(row)
+        mat4z = np.vstack(list_mat4z)
+        return mat4z

@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from control import matlab
 from scipy.optimize import linprog
 from tmpc.utils_plot_constraint import plot_polytope
+from tmpc.support_fun import fun_support
 
 
 class PosInvaTerminalSetBuilder():
@@ -40,24 +41,12 @@ def is_set_in_half_plane(mat_poly_set, half_plane_le,
                          fun_criteria=lambda x: x < 1):
     """
     polyhedra set is specified by np.matmul(mat_poly_set, x) <= 1
-    c @ x
-    such that::
-    A_ub @ x <= b_ub
-    A_eq @ x == b_eq
-    lb <= x <= ub
+    support function is defined:
+        h(mat_poly_set, q) = max_{x} x^Tq, s.t. x \\in S={mat_poly_set x <=1}
     """
-    # ub:upper bound
-    if b_ub is None:
-        b_ub = 1.0 * np.ones(mat_poly_set.shape[0])
-    # NOTE: b_ub should be consistent with mat_poly_set
-
-    min_neg = linprog(
-        -1.0*half_plane_le,  # convert to maximize
-        A_ub=mat_poly_set,   # constraint should not revert sign
-        # NOTE: not K-step backward reachability constraint matrix!
-        b_ub=b_ub)
-
-    max_val = -1.0 * min_neg.fun  # max value of original problem
+    # NOTE: should be mat_poly_set,
+    # not K-step backward reachability constraint matrix!
+    max_val = fun_support(mat_poly_set, half_plane_le, b_ub)
 
     if fun_criteria(max_val+tolerance):
         # if worst case satisfies constraint, then no need for this constraint
@@ -158,7 +147,7 @@ def test_iterate_invariance():
          [1, 0],
          [-1, 0],
          [0, -1]])
-    constraint = iterate_invariance(mat0=M0, A=A, n_iter=20,
+    constraint = iterate_invariance(mat0=M0, A=A, n_iter=22,
                                     tolerance=0)
     constraint = iterate_invariance(mat0=M0, A=A, n_iter=30,
                                     tolerance=1e-4)
