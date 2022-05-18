@@ -43,6 +43,9 @@ class ConstraintEqLdyn():
         self.mat_input = mat_input
         self.dim_sys = self.mat_sys.shape[0]
         self.dim_input = self.mat_input.shape[1]
+        self.horizon = None
+        self.mat_lhs = None
+        self.mat_rhs = None
 
     def __call__(self, x, horizon):
         """__call__.
@@ -53,6 +56,8 @@ class ConstraintEqLdyn():
         [0_{n},  [0]_n,  [A]_n, -[I]_n,|[0]_{n*r}, [0]_{n*r}, [B]_{n*r}] d =0
         :param x: current state
         """
+        if self.horizon == horizon:
+            return self.mat_lhs, self.mat_rhs
         n = x.shape[0]
         x = x.reshape(n, 1)   # FIXME: do we need this?
         r = self.dim_input
@@ -67,9 +72,10 @@ class ConstraintEqLdyn():
         mat_block_eye = self.build_block_eye(horizon, n, r)
         mat_block = mat_block_a + mat_block_b + mat_block_eye
         #
-        mat_lhs = np.vstack([mat_init_block, mat_block])
-        mat_rhs = np.vstack([x, np.zeros((horizon*(n), 1))])  # equality constraint is w.r.t. x, not u, not n+r
-        return mat_lhs, mat_rhs
+        self.mat_lhs = np.vstack([mat_init_block, mat_block])
+        self.mat_rhs = np.vstack([x, np.zeros((horizon*(n), 1))])  # equality constraint is w.r.t. x, not u, not n+r
+        self.horizon = horizon
+        return self.mat_lhs, self.mat_rhs
 
     def build_block_eye(self, horizon, n, r):
         """

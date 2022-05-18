@@ -1,23 +1,31 @@
 """
-S_k= \\minkowski_sum_{i=0:k-1}(A+BK^{s})^i*W
-to judge if s_k \\ in S_k
-(Note S_k is pre-stabalized, by choosing K^{s}, so A+BK^{s} is hurwitz)
+S_J= (1-\alpha)^{-1}\\minkowski_sum_{j=0:J-1}(A+BK^{s})^j*W
+(Note s_t, as state variable (sufficient statistic) for the disturbed system,
+x_t = z_t + s_t,
+is governed by pre-stabalized set dynamic, by choosing K^{s},
+so A+BK^{s} is hurwitz)
+to judge if s_0 \\ in S_J (positive invariant set of state variable)
+(s_0 is initial state variable)
 <=>
-there exist w_{0:k-1}, s.t.
-- s_k = \sum_{i=0:k-1}(A+BK^{s})^i*w_i, equality constraint
-- w_i \in W  or mat_disturbance * w_i <= 1
+there exist disturbance w^{0:J-1} (note this is not the same time index, but
+just forward propagation), s.t.
+- s_0 = \\sum_{j=0:J-1}(A+BK^{s})^j*w^j, equality constraint
+- w^j \\in W  or mat_w * w^j <= 1
 
 # state tubes:
 X_0={z_0}+S, X_1={z_1}+S, ..., X_T={z_T}+S  # minkowski sum
+z_t = Az_{t-1}+Bv_t = Az_{t-1}+B*K^{z}*z_t = (A+BK^{z})*z_t
 
 # control tubes:
 {v_0} + K^{s}*S,  {v_1} + K^{s}*S, ..., {v_T} + K^{s}*S,
-#
-#x_k = z_k + s_k \\in X_k \\ in X
-#so s_k = x_k - z_k where z_k is the decision variable
-#
-#s_k = x_k - z_k
-#s_{k} = (A+BK^{s})s_{k-1} + w_{k-1}
+<=>{K^{z}z_0} + K^{s}*S,  {K^{z}z_1} + K^{s}*S, ..., {K^{z}z_T} + K^{s}*S,
+
+
+# x_{t} = z_{t} + s_{t} \\in X_t \\ in X
+so s_t = x_t - z_t where z_t is the decision variable
+
+# backward decomp
+s_{t} = (A+BK^{s})s_{t-1} + w_{t-1}
 """
 import numpy as np
 
@@ -49,7 +57,11 @@ class ConstraintZ0():
         x=z_0+(1-\alpha)^{-1}\\sum_{i=0:k^{\alpha}-1}A_c^i*w_i (eq)
         mat_w * w_i <=1 (ub)
         <=> Let k^{alpha} = J, l=(1-\alpha)^{-1}
+
+    - equality constraint:
     [I_z=A_c^0, l*A_c^1, ..., l*A_c^J][z_0^T, w_1^T, ..., w_{J}^T]^T = [0]_z
+
+    - inequality constraint:
     [[0]_z, kron(mat_w, ones(1, J))][z_0^T, w_1^T, ..., w_{J}^T]^T <=[1]
     """
     def __init__(self, mat_a_c, mat_w, dim_sys, j_alpha, alpha):

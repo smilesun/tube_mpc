@@ -11,12 +11,14 @@ class PosInvaTerminalSetBuilder():
 
     def __init__(self, mat_sys,
                  mat_state_constraint,
-                 tolerance=0.01
+                 tolerance
                  ):
         """__init__.
-
-        :param mat_sys:
-        :param mat_state_constraint:
+        :param mat_sys: closed loop dynamic A_c=A+BK
+        :param mat_state_constraint: Mx<=1
+        :param tolerance: to judge backward inclusion,
+        the linear program might return a value close
+        to 1.
         """
         self.tolerance = tolerance
         self.mat_state_constraint = mat_state_constraint
@@ -24,8 +26,7 @@ class PosInvaTerminalSetBuilder():
 
     def __call__(self, n_iter):
         """__call__.
-
-        :param n_iter:
+        :param n_iter: maximum number of iterations
         """
         mat_reach_constraint = iterate_invariance(
             mat0=self.mat_state_constraint,
