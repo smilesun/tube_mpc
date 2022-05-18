@@ -5,6 +5,24 @@ import numpy as np
 
 class ConstraintTightening():
     """
+        -constraint tightening for each stage
+            original stage constraint for x_t (decoupled from u):
+                Cx_{t}+Du_{t} <=1
+                Mx_{t} <=1 (when D=0)
+                C(z_{t}+s_{t}) +D(K^{z}*z_{t}+K^{s}*s_t) <=1 (general form)
+                <=>(C+DK^{z})*z + (C+DK^{s})*s <= 1
+                <=>(C+DK^{z})*z + max_s{(C+DK^{s})*s} <= 1
+                <=> M^{z}*z + max_s {M^{s}*s} <=1 for t=0:\\infty
+                s.t. s \\in S_{J(\\alpha)}
+                <=> for any i in nrow(M^{s})==nrow(M^{z}):
+                    M^{z}[i, :]*z + max_s {M^{s}[i, :]*s} <=1
+                s.t. s \\in S_{J(\\alpha)}
+                <=> for any i in nrow(M^{s})==nrow(M^{z}):
+                    M^{z}[i, :]*z + h(S_{J(\\alpha)}, M^{s}[i, :]^T) <=1
+                    M^{z} = C+DK^{z}
+                    M^{s} = C+DK^{s}
+
+
     M[i,:]*z_k <=1-h(S_{k}, M[i,:])<=1-h(S_{\\infty}, M[i,:])
     where S_{\\infty} is the worst case stage disturbance
 

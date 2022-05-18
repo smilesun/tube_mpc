@@ -1,5 +1,5 @@
 import numpy as np
-from tmpc.constraint_pos_inva_terminal import PosInvaTerminalSetBuilder
+from tmpc.constraint_tightening_z_terminal import ConstraintZT
 from tmpc.constraint_eq_ldyn import ConstraintEqLdyn
 from tmpc.constraint_block_horizon_lqr_solver import LqrQp
 from tmpc.mpc_qp import MPCqp
@@ -18,9 +18,16 @@ class MPCqpTube(MPCqp):
     decision variable in long vector form:
         v_0, v_1, .., v_{T-1}, z_1, z_2, ..., z_T, z_0, w_0, w_1, .., w{j-1}
 
+    ## Problem definition:
+        Cx+Du<=1
+        C(z+s)+D(K^{z}*z+K^{s}s) <= 1
+        (C+DK^{z})*z + (C+DK^{s})*s <= 1
+        (C+DK^{z})*z + max_s{(C+DK^{s})*s} <= 1
+        M^{z}*z + max_s {M^{s}*s} <=1 for t=0:\\infty
+
     ## constraint
         - input constraint: current state x_0=x=z_0+s_0
-            -equality constraint for z_0:
+            -equality constraint for z_0 (different from nominal MPC):
                 state variable s_0 can be decomposed of J step
                 forward propagation
                 [I_z=A_c^0, l*A_c^1, ..., l*A_c^J]
@@ -29,7 +36,7 @@ class MPCqpTube(MPCqp):
                 [[0]_z, kron(mat_w, ones(1, J))]
                 [z_0^T, w_1^T, ..., w_{J}^T]^T <=[1]
 
-        - terminal constraint for z_T:
+        - terminal constraint for z_T:  #FIXME
             - z_{T+1}=(A+BK^s)*z_T = A_c*z_T
             - stage constraint Mx_t<=1.
             - to ensure Mx_{T:\\infty} <=1, i.e.
@@ -60,11 +67,27 @@ class MPCqpTube(MPCqp):
             Az_0 + Bv_0 = z_1
         ........................
         -constraint tightening for each stage
-            original stage constraint for x_t:
-                Mx_{t_k} <=1
+            original stage constraint for x_t (decoupled from u):
+                Cx_{t}+Du_{t} <=1 (Cx_{t} <=1 (when D=0))
+                <=>
+                C(z_{t}+s_{t}) +D(K^{z}*z_{t}+K^{s}*s_t) <=1 (general form)
+                <=>(C+DK^{z})*z + (C+DK^{s})*s <= 1
+                <=>(C+DK^{z})*z + max_s{(C+DK^{s})*s} <= 1
+                <=> M^{z}*z + max_s {M^{s}*s} <=1 for t=0:\\infty
+                s.t. s \\in S_{J(\\alpha)}
+                <=> for any i in nrow(M^{s})==nrow(M^{z}):
+                    M^{z}[i, :]*z + max_s {M^{s}[i, :]*s} <=1
+                s.t. s \\in S_{J(\\alpha)}
+                <=> for any i in nrow(M^{s})==nrow(M^{z}):
+                    M^{z}[i, :]*z + h(S_{J(\\alpha)}, M^{s}[i, :]^T) <=1
+                    M^{z} = C+DK^{z}
+                    M^{s} = C+DK^{s}
+
+
+            #special case, when D=0
             now x_{t_k} = z_{t_k} + s_{t_k}
-            Mx_{t_k} = M(z_{t_k} + s_{t_k}) <=1
-            <=>Mz_{t_k} + max_{s_{t_k})}{Ms_{t_k})} <=1
+            Cx_{t_k} = C(z_{t_k} + s_{t_k}) <=1
+            <=>Cz_{t_k} + max_{s_{t_k})}{Ms_{t_k})} <=1
             <=>
             M[i,:]*z_k <=1-h(S_{k}, M[i,:])<=1-h(S_{\\infty}, M[i,:])
             <=> {M[i,:]/[1-h(S_{\\infty}, M[i,:])]}*z_k <= 1
@@ -76,8 +99,11 @@ class MPCqpTube(MPCqp):
             [z_0, z_1, ..., z_T, w_{1:T}, v_{0:T-1}] < 1
     """
     def __init__(self, mat_sys, mat_input,
-                 mat_q, mat_r, mat_k,
+                 mat_q, mat_r, mat_k_s,
+                 mat_k_z,
                  constraint_x_u):
         """__init__.
         :param obj_dyn:
         """
+        mat_m4x =
+        ConstraintZT(mat_m4x)
