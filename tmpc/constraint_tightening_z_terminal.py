@@ -19,9 +19,23 @@ class ConstraintZT():
         <=>M^{z}z_{t}+M^{s}s_{t} <=1, for t>T  (sharing the common M is special
         case when D=0 in Cx+Du<=1)
         ---
-        s.t. x_{t} = x_{t-1}+(K^{z}*z_{t-1}+K^{s}*s_{t-1})
+        s.t. x_{t} = Ax_{t-1}+B(K^{z}*z_{t-1}+K^{s}*s_{t-1}) + w_t
+        decompose x_{t}=z_{t}+s_{t}
+        s.t.
+        &z_{t}
+        = Az_{t-1} + Bv_{t-1}
+        = Az_{t-1} + B{K^{z}z_{t-1}}
+        = (A+BK^{z})z_{t-1}
+
+        &s_{t}= x_{t} - z_{t}
+        =Ax_{t-1}+B(K^{z}*z_{t-1}+K^{s}*s_{t-1}) + w_t - (A+BK^{z})z_{t-1}
+        =A(z_{t-1}+s_{t-1})+B(K^{z}*z_{t-1}+K^{s}*s_{t-1}) + w_t ...
+        ...- (A+BK^{z})z_{t-1}
+        ={A+BK^{s}}s_{t-1} + w_t
+
         - one step backward reachability:
-            x_t = (A+BK^{z})*z_{t-1} + (A+BK^{s})*s_{t-1}
+            x_t = (A+BK^{z})*z_{t-1} + (A+BK^{s})*s_{t-1} + **w_t**
+            (do not forget the disturbance $w_t$)
             x_t, u_t \\in Y:={x,u|Cx+Du<=1}={x,
             u(x, K^z, K^s)|CX+D(K^z*z+K^s*s)<=1}
             <=>two simultaneous constraint
@@ -30,46 +44,72 @@ class ConstraintZT():
                     <=>
                     M^{z}z_t + M^{s}s_t <=1
                     <=>
-                    M^z[(A+BK^z)z_{t-1}] + M^{s}[(A+BK^{s})s_{t-1}]<=1
+                    M^z[(A+BK^z)z_{t-1}] + M^{s}[(A+BK^{s})s_{t-1}+w_{t-1}]<=1
+                    where **s_t=(A+BK^{s})s_{t-1}+w_{t-1}**
                 -current step feasible
                     M^{z}*z_{t-1} + M^{s}*s_{t-1} <=1
+
             <=>two simultaneous constraint
                 -
-                M^{z}[(A+BK^z)z_{t-1}]<= 1-max{M^{s}*[A+BK^{s}]s_{t-1}}
+                M^{z}[(A+BK^z)z_{t-1}]<= 1-max{M^{s}*[[A+BK^{s}]s_{t-1}+w_{t}]}
+                **do not forget w_t**
+                <=>
+                M^{z}[(A+BK^z)z_{t-1}]<= 1-max{M^{s}*[s_t} ...
+                ...<= 1-max{M^{s}*[s_{\\infty}} (note z_{t-1}, s_t of different
+                time step occur in the same inequality, since we want to get
+                rid of w_{t}, and since we pre-stabalize {s_t} sequence, the
+                worst case $s$ can be used for the bound.
                 -
-                M^{z}*z_{t-1} <=1-max{M^{s}*s_{t-1}}<=1-max{M^{s}*s}
+                M^{z}*z_{t-1} <=1-max{M^{s}*s_{t-1}}<=1-max{M^{s}*s_{\\infty}}
 
         - convert to standard form of r.h.s. all ones
-            &(1-max{M^{s}*[A+BK^{s}]*s})^{-1}M^{z}[(A+BK^{z})z_{t-1}<= 1
-            &(1-max{M^{s}*s})^{-1}M^{z}z_{t-1} <=1
+            define [1]=ones(nrow, 1) for below
+            &([1]-max{M^{s}*s})^{-1}M^{z}[(A+BK^{z})z_{t-1}<= [1]
+            &([1]-max{M^{s}*s})^{-1}M^{z}z_{t-1} <=[1]
             i.e.
-            &(1-max{M^{s}*[A+BK^{s}]*s})^{-1}[M^{z}(A+BK^{z})]z_{t-1}<= 1
-            &(1-max{M^{s}*s})^{-1}[M^{z}]z_{t-1} <=1
+            &(1-max{M^{s}*s})^{-1})[M^{z}(A+BK^{z})]z_{t-1}<= [1]
+            &(1-max{M^{s}*s})^{-1})[M^{z}]z_{t-1} <=[1]
             i.e.
-            &[c_1*M^{z}A_c^{z}]z_{t-1}<= 1
-            &[c_2*M^{z}]z_{t-1} <=1
+            &[[c_1]*M^{z}]A_c^{z}]z_{t-1}<= [1]
+            (***[c_1]*M^{z} is row-wise multiplication***)
+            &[[c_1]*M^{z}]z_{t-1} <=[1]
             i.e.
-            &[c_2*M^{z}\frac{c_1}{c_2}A_c^{z}]z_{t-1}<= 1
-            &[c_2*M^{z}]z_{t-1} <=1
-            i.e.
-            & M'A'z <= 1
+            & M'A_c^{z}z <= 1
             & M'z <= 1
             where,
-            M'= c_2*M^{z},
-            A'= \frac{c_1}{c_2}A_c^{z} = \frac{c_1}{c_2}(A+BK^{z})
-        - extend to infinity steps
-        <=> M_{backward-\\infty, A_c=A+BK^z, max{M*s}}z_{T} <=1
+            M'= [c_1]*M^{z} (***row-wise multiplication***),
+            A_c^{z}= (A+BK^{z})
+        - extend to infinity backward steps,i.e. starting from z_T
+        nominal system should stay in a set which is positive
+        invariant.
+        <=> as long as
+        M_{backward reachability}z_{T} <=1
+        then
+        M'z_{T:\\infinty} <= 1 (i.e. all subsequent steps until infinity
+        will be constrained to stay in safe region)
+        <=>((1-max{M^{s}*s})^{-1})[M^{z}]z_{T:\\infty} <=[1]
+        under A_c^z = A+BK^{z}
     """
-    def __init__(self, mat_m4x, mat_m4w,
+    def __init__(self, mat_m4x,
+                 mat_constraint4w,
                  mat_sys,
                  mat_input,
                  mat_k_s,
                  mat_k_z,
                  tolerance
                  ):
+        """__init__.
+        :param mat_m4x:
+        :param mat_constraint4w:
+        :param mat_sys:
+        :param mat_input:
+        :param mat_k_s:
+        :param mat_k_z:
+        :param tolerance:
+        """
         self.mat4z_terminal = None  # matrix to generate
         self.obj_support_decomp = SupportDecomp(
-            mat_set=mat_m4w,
+            mat_set=mat_constraint4w,
             mat_sys=mat_sys,
             mat_input=mat_input,
             mat_k_s=mat_k_s)
@@ -79,10 +119,19 @@ class ConstraintZT():
             obj_support_decomp=self.obj_support_decomp)
 
         # A+BK^z
+        """
+            &[[c_1]*M^{z}]A_c^{z}]z_{t-1}<= [1]
+            (***[c_1]*M^{z} is row-wise multiplication***)
+            &[[c_1]*M^{z}]z_{t-1} <=[1]
+            i.e.
+            & M'A_c^{z}z <= 1
+            & M'z <= 1
+        A_c^{z} = A+BK^z does not need to be tightened
+        """
         self.mat_a_c4z = mat_sys + np.matmul(mat_input, mat_k_z)
         self.pos_inva_builder = PosInvaTerminalSetBuilder(
-            mat_sys=self.mat_a_c4z,
-            mat_state_constraint=self.mat_z,
+            mat_sys=self.mat_a_c4z,  # no need to tighten
+            mat_state_constraint=self.mat_z,  # already tightened
             tolerance=tolerance)
         ##
 
@@ -90,4 +139,9 @@ class ConstraintZT():
         """
         """
         self.mat4z_terminal = self.pos_inva_builder()
+        return self.mat4z_terminal
+
+    @property
+    def constraint_mat(self):
+        """constraint_mat."""
         return self.mat4z_terminal
