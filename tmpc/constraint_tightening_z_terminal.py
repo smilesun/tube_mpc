@@ -90,16 +90,17 @@ class ConstraintZT():
         <=>((1-max{M^{s}*s})^{-1})[M^{z}]z_{T:\\infty} <=[1]
         under A_c^z = A+BK^{z}
     """
-    def __init__(self, mat_m4x,
+    def __init__(self, constraint_x_u,
                  mat_constraint4w,
                  mat_sys,
                  mat_input,
                  mat_k_s,
                  mat_k_z,
+                 j_alpha,
                  tolerance
                  ):
         """__init__.
-        :param mat_m4x:
+        :param constraint_x_u:
         :param mat_constraint4w:
         :param mat_sys:
         :param mat_input:
@@ -108,6 +109,13 @@ class ConstraintZT():
         :param tolerance:
         """
         self.mat4z_terminal = None  # matrix to generate
+        # Cx+Du<=1
+        # C(z+s) + D(K^{z}z+K^{s}s<=1)
+        # (C+DK^{z})z + (C+DK^{s})s<=1
+        mat_constraint4z = constraint_x_u.mat_x + np.matmul(
+            constraint_x_u.mat_u, mat_k_z)
+        mat_constraint4s = constraint_x_u.mat_x + np.matmul(
+            constraint_x_u.mat_u, mat_k_s)
         self.obj_support_decomp = SupportDecomp(
             mat_set=mat_constraint4w,
             mat_sys=mat_sys,
@@ -115,8 +123,10 @@ class ConstraintZT():
             mat_k_s=mat_k_s)
 
         self.mat_z = ConstraintTightening(
-            mat_m4x=mat_m4x,
-            obj_support_decomp=self.obj_support_decomp)
+            mat_constraint4z=mat_constraint4z,
+            mat_constraint4s=mat_constraint4s,
+            obj_support_decomp=self.obj_support_decomp,
+            j_alpha=j_alpha)
 
         # A+BK^z
         """
@@ -133,7 +143,6 @@ class ConstraintZT():
             mat_sys=self.mat_a_c4z,  # no need to tighten
             mat_state_constraint=self.mat_z,  # already tightened
             tolerance=tolerance)
-        ##
 
     def __call__(self):
         """
