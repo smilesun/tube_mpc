@@ -3,7 +3,7 @@ import scipy
 from tmpc.constraint_tightening import ConstraintTightening
 from tmpc.constraint_tightening_z_terminal import ConstraintZT
 from tmpc.constraint_tightening_z0w import ConstraintZ0w
-from tmpc.constraint_eq_ldyn import ConstraintEqLdyn
+from tmpc.constraint_eq_ldyn_1_terminal import ConstraintEqLdyn1T
 from tmpc.support_decomp import SupportDecomp
 from tmpc.mpc_qp import MPCqp
 
@@ -128,10 +128,17 @@ class MPCqpTube(MPCqp):
         """__init__.
         :param obj_dyn:
         """
+        self.mat_ub_block = None
+        self.b_ub = None
+        self.horizon = None
+
         self.dim_sys = mat_sys.shape[0]
+        self.mat_input = mat_input
+        self.mat_sys = mat_sys
         self.dim_input = mat_input.shape[1]
         self.j_alpha = j_alpha
         mat_a_c4s = mat_sys + np.matmul(mat_input, mat_k_s)
+
         self.builder_z_0w = ConstraintZ0w(
             mat_a_c4s=mat_a_c4s,
             mat_w=mat_constraint4w,
@@ -139,6 +146,7 @@ class MPCqpTube(MPCqp):
             dim_input=self.dim_input,
             j_alpha=j_alpha,
             alpha=alpha_ini)
+
         self.builder_z_terminal = ConstraintZT(
             constraint_x_u,
             mat_constraint4w,
@@ -147,9 +155,7 @@ class MPCqpTube(MPCqp):
             self.j_alpha,
             tolerance)
 
-        self.mat_ub_block = None
-        self.horizon = None
-        self.stage_mat4zT = self.builder_z_terminal()
+        self.stage_mat4z_terminal = self.builder_z_terminal()
 
         self.mat_constraint4z = constraint_x_u.mat_x + \
             np.matmul(constraint_x_u.mat_u, mat_k_z)
@@ -168,13 +174,36 @@ class MPCqpTube(MPCqp):
             self.obj_support_decomp,
             self.j_alpha)()
 
-        #self.block_eq_constraint_builder =
+        self.builder_eq4zv = ConstraintEqLdyn1T(
+            self.mat_input,
+            self.mat_sys)
 
+    def build_mat_block_eq(self, horizon, x):
+        """
+        z_1=A*z_0 + Bv_0
+        z_2=A*z_1 + Bv_1
+        ...
+        z_T=A*z_{T-1}+Bv_{T-1}
+        ---
+        z_0,z_1,z_2,z_3|v_0,v_1,v_2|w_1...w_J
+        [ A, -I, 00,00 |  B,  0,  0|00, 00]
+        [00,  A, -I,00 |  0,  B,  0|00, 00]
+        [00,  00, A,-I |  0,  0,  B|00, 00]
+        """
+        mat_eq4w_z0, b4w_z0 = \
+            self.builder_z_0w.build_block_equality_constraint(horizon, x)
+        # dynamic equality
+        mat_eq4zv = self.builder_eq4zv(horizon)
+        mat_eq4zv_full = np.hstack(
+            [mat_eq4zv,
+             np.zeros((mat_eq4zv.shape[0], self.dim_sys*self.j_alpha))])
+        # end dynamic equality
+        block_mat_eq = np.vstack([mat_eq4w_z0, mat_eq4zv_full])
 
-    def build_mat_block_eq(self, horizon):
-        """
-        """
-        self.builder_z_0w.build_block_equality_constraint(horizon)
+        block_b_eq = np.vstack([b4w_z0,
+                                np.zeros((mat_eq4zv_full.shape[0], 1))])
+
+        return block_mat_eq, block_b_eq
 
     def build_mat_block_ub(self, horizon, j_alpha):
         """
@@ -199,8 +228,9 @@ class MPCqpTube(MPCqp):
 
         """
         list_block_z = []
-        for _ in range(horizon+1):  # FIXME:constraint tightening the same for z_0?
+        for _ in range(horizon):  # FIXME:constraint tightening the same for z_0?
             list_block_z.append(self.stage_mat4z)
+        list_block_z.append(self.stage_mat4z_terminal)
         mat_left = scipy.linalg.block_diag(*list_block_z)
         mat_right = np.zeros((
             mat_left.shape[0],
@@ -209,3 +239,5 @@ class MPCqpTube(MPCqp):
         block_mat4w = self.builder_z_0w.build_block_inequality_constraint4w(
             horizon)
         self.mat_ub_block = np.vstack([mat_ub_block_zv, block_mat4w])
+        self.b_ub = np.ones((self.mat_ub_block.shape[0], 1))
+        return self.mat_ub_block, self.b_ub

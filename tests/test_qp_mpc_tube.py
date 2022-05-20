@@ -36,4 +36,5 @@ def test_tube():
     assert mpctube.mat_ub_block.shape[1] == \
         horizon*(prob.dim_input + prob.dim_sys) + prob.dim_sys \
         + j_alpha * prob.dim_sys
-    mpctube.build_mat_block_eq(horizon=horizon)
+    x = np.array([[0.01, 0.01]]).T
+    mpctube.build_mat_block_eq(x=x, horizon=horizon)

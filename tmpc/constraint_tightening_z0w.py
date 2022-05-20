@@ -91,7 +91,7 @@ class ConstraintZ0w():
         #
         assert self.mat_w.shape[1] == self.dim_sys
 
-    def build_block_equality_constraint(self, horizon):
+    def build_block_equality_constraint(self, horizon, x):
         """
         [I_z=A_c^0, [0]_{dim_sys, dim_sys*horizon,
         dim_input*horizon},
@@ -103,7 +103,7 @@ class ConstraintZ0w():
         mat_power = np.eye(self.mat_a_c4s.shape[0])
         list_a_c = [mat_power]
         mat_power *= self._magnify
-        for _ in range(self._j_alpha):
+        for _ in range(self._j_alpha-1):
             mat_power = np.matmul(mat_power, self.mat_a_c4s)
             list_a_c.append(mat_power)
         mat_eq4w = np.hstack(list_a_c)
@@ -112,14 +112,14 @@ class ConstraintZ0w():
              np.zeros((self.dim_sys, horizon*(self.dim_sys + self.dim_input))),
              mat_eq4w])
         self.b_eq = np.zeros((self.mat_eq.shape[0], 1))
+        self.b_eq[0:self.dim_sys] = x
         return self.mat_eq, self.b_eq
 
     def build_block_inequality_constraint4w(self, horizon):
         """
-        horizon=4, dim_sys=2, dim_input=1
-        [00,00,00,00]_z[0,0,0]_v[xx,00,00]_w
-        [00,00,00,00]_z[0,0,0]_v[00,xx,00]_w
-        [00,00,00,00]_z[0,0,0]_v[00,00,xx]_w
+        horizon=4, dim_sys=2, dim_input=1, J=2 (for w)
+        [00,00,00,00]_z[0,0,0]_v[xx,00]_w
+        [00,00,00,00]_z[0,0,0]_v[00,xx]_w
         ---
         Not the following!
         [[0]_{}, kron(mat_w, ones(1, J))]*

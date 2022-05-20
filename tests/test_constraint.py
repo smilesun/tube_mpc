@@ -1,10 +1,24 @@
 import pytest
 import numpy as np
 from tmpc.constraint_eq_ldyn import ConstraintEqLdyn
+from tmpc.constraint_eq_ldyn_1_terminal import ConstraintEqLdyn1T
 from tmpc.constraint_block_horizon_terminal import ConstraintBlockHorizonTerminal
 from tmpc.constraint_block_horizon_stage_x_u import ConstraintHorizonBlockStageXU
 from tmpc.constraint_x_u_couple import ConstraintStageXU
 from tmpc.utils_case import Probset
+
+
+def test_constraint_eq_dyn_xv():
+    prob = Probset()
+    horizon = 3
+    builder = ConstraintEqLdyn1T(prob.mat_input, prob.mat_sys)
+    mat_lhs = builder(horizon=horizon)
+    #mat_lhs, mat_rhs = builder(horizon=horizon)
+    mat_lhs
+    #assert mat_rhs.shape[0] == mat_lhs.shape[0]
+    #assert mat_rhs.shape[0] == prob.dim_sys*horizon
+    assert mat_lhs.shape[1] == (prob.dim_sys*(horizon+1) +
+                                prob.dim_input*horizon)
 
 
 def test_constraint_eq_dyn():
@@ -63,6 +77,7 @@ def test_constraint_xu_stage_block():
                             dim_input=prob.dim_input,
                             mat_x=mat_x,
                             mat_u=mat_u)
-    constra = ConstraintHorizonBlockStageXU(mat_state_ub=obj.mat_x,
-                                  mat_u_ub=obj.mat_u)
+    constra = ConstraintHorizonBlockStageXU(
+        mat_state_ub=obj.mat_x,
+        mat_u_ub=obj.mat_u)
     mat, vec_b = constra(3)
