@@ -127,6 +127,8 @@ class MPCqpTube(MPCqp):
         """__init__.
         :param obj_dyn:
         """
+        self.dim_sys = mat_sys.shape[0]
+        self.dim_input = mat_input.shape[1]
         self.j_alpha = self.get_j_from_alpha(alpha_ini)
         self.builder_z_terminal = ConstraintZT(
             constraint_x_u,
@@ -138,7 +140,7 @@ class MPCqpTube(MPCqp):
 
         self.mat_ub_block = None
         self.horizon = None
-        self.stage_mat4z0 = self.builder_z_terminal.mat4z_terminal
+        self.stage_mat4z0 = self.builder_z_terminal()
 
         self.mat_constraint4z = constraint_x_u.mat_x + \
             np.matmul(constraint_x_u.mat_u, mat_k_z)
@@ -181,5 +183,5 @@ class MPCqpTube(MPCqp):
         mat_left = scipy.linalg.block_diag(*list_block_z)
         mat_right = np.zeros((
             mat_left.shape[0],
-            horizon*(self.dim_input+j_alpha)))
+            horizon*self.dim_input + self.dim_sys*j_alpha))
         self.mat_ub_block = np.hstack((mat_left, mat_right))

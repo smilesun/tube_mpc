@@ -29,3 +29,9 @@ def test_tube():
         constraint_x_u=constraint_x_u,
         alpha_ini=0.01,
         tolerance=0.01)
+    horizon = 3
+    j_alpha = 3
+    mpctube.build_mat_block_ub(horizon=horizon, j_alpha=j_alpha)
+    assert mpctube.mat_ub_block.shape[1] == \
+        horizon*(prob.dim_input + prob.dim_sys) + prob.dim_sys \
+        + j_alpha * prob.dim_sys

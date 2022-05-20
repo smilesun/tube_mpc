@@ -30,8 +30,8 @@ class ConstraintBlockHorizonTerminal():
         mat_sys_closed_loop = mat_sys + np.matmul(mat_input, mat_k)  # A+BK
         self.pos_inva = PosInvaTerminalSetBuilder(
             mat_sys_closed_loop,
-            mat_state_constraint)
-        self.mat_term_inf_pos_inva_k = self.pos_inva(1)  # FIXME:
+            mat_state_constraint, tolerance=0)
+        self.mat_term_inf_pos_inva_k = self.pos_inva(10)  # FIXME:
 
     def gen_block_terminal_state_inva_constraint(self, horizon):
         """

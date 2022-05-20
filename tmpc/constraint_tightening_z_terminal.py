@@ -97,7 +97,8 @@ class ConstraintZT():
                  mat_k_s,
                  mat_k_z,
                  j_alpha,
-                 tolerance
+                 tolerance,
+                 max_iter4pos_inva=100
                  ):
         """__init__.
         :param constraint_x_u:
@@ -108,6 +109,7 @@ class ConstraintZT():
         :param mat_k_z:
         :param tolerance:
         """
+        self.max_iter4pos_inva = max_iter4pos_inva
         self.mat4z_terminal = None  # matrix to generate
         # Cx+Du<=1
         # C(z+s) + D(K^{z}z+K^{s}s<=1)
@@ -126,7 +128,7 @@ class ConstraintZT():
             mat_constraint4z=mat_constraint4z,
             mat_constraint4s=mat_constraint4s,
             obj_support_decomp=self.obj_support_decomp,
-            j_alpha=j_alpha)
+            j_alpha=j_alpha)()
 
         # A+BK^z
         """
@@ -147,7 +149,7 @@ class ConstraintZT():
     def __call__(self):
         """
         """
-        self.mat4z_terminal = self.pos_inva_builder()
+        self.mat4z_terminal = self.pos_inva_builder(self.max_iter4pos_inva)
         return self.mat4z_terminal
 
     @property
