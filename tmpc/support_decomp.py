@@ -1,32 +1,41 @@
-"""
-## find finite sequence approximation of S_{\\infty} using spectral radius,
-conditioned on approximation parameter $\\alpha$
-$S_{\\infty} \\approx  \\hat{S, \\alpha}$
-\\hat{S, \\alpha}$
-=$\\minkowski_sum_{i=0:k_{\\alpha}-1}(A+BK^{s})^i*W$ where \\alpha has
-relation to the spectral radius
-
-## find Decomposition of support function w.r.t. \\hat{S, \\alpha}:
-- h(\\hat{S}, q)= \\sum_{j=0:k_{\\alpha}-1}h(W, [(A+BK^{s})^j]^T*q)
-"""
 import numpy as np
 from tmpc.support_fun import fun_support
 
 
 class SupportDecomp():
     """
-    - set S={minkowski_sum}_{i=0:k_{\\alpha}-1}S_i
-      h(S, q) = \\sum_{i=0:k_{\\alpha}-1}h(S_i, q)
-    - set S=A*W={x=Aw, s.t. w \\in W}
-      h(S,q)
-      = h(A*W, q) = max_{x\\in A*W}{x^Tq, s.t. x=Aw, s.t. w \\in W}
-      = max_{w\\in W} (Aw)^Tq = max_{w\\in W} (w^TA^Tq)
-      = h(W, A^Tq)
-    ## set \\hat{S, \\alpha}={minkowski_sum}_{i=0:k_{\\alpha}-1}(A+BK^{s})^i*W$
-    where \\alpha has relation to the spectral radius
+    # Support function on Minkowski sum of sets equals sum of support function
+    - set S={minkowski_sum}_{j=0:J-1}S_j
+      h(S, q):= max_s {q^Ts|s=\\sum_{j=0:J-1}s_j \\in S}
+      = max_s {q^T\\sum_{j=0:J-1}s_j |s_j\\in S_j}
+      =\\sum_{j=0:J-1}max_{s_j} {q^Ts_j |s_j \\in S_j}
+      =\\sum_{j=0:J-1}h(S_j, q)
 
-    ## find Decomposition of support function w.r.t. \\hat{S, \\alpha}:
-    - h(\\hat{S}, q)= \\sum_{j=0:k_{\\alpha}-1}h(W, [(A+BK^{s})^j]^T*q)
+      in summary:
+          h(S, q) = \\sum_{j=0:J-1}h(S_j, q)
+
+    - set S_j=A^j*{W}:={Aw | w \\in W}
+      h(S_j, q)
+      = h(A^j*{W}, q) = max_{x\\in A^j*{W}}{q^Tx, s.t. x=A^jw, s.t. w \\in W}
+      = max_{w\\in W} q^T(A^jw) = max_{w\\in W} ((A^j)^Tq)^Tw
+      = h(W, q'=(A^j)^Tq)
+      in summary:
+      h(A^j*{W}, q) = h({W}, q'=(A^j)^Tq)
+
+    ## Use Case:
+    Once finite sequence approximation of S_{\\infty} using spectral radius is
+    found, conditioned on enlargement parameter $(1-\\alpha)^{-1}$, s.t.
+    S_{J_{\\alpha}} \\subset S_{\\infty} \\subset  ...
+    ...(1-\\alpha)^{-1}S_{J_{\\alpha}}
+    where,
+    S_{J_{\\alpha}}=\\minkowski_sum_{j=0:J_{\\alpha}-1}(A+BK_s)^j*{W},
+    where J_{\\alpha} satisfies
+    (A+BK_s)^{J_{\\alpha}}{W} \\subset \\alpha{W}
+
+    ## find Decomposition of support function w.r.t. S_{J_{\\alpha}}
+    - h(S_{J_{\\alpha}}, q)= \\sum_{j=0:J_{\\alpha}-1}h(W, [(A+BK^{s})^j]^T*q)
+    - h((1-\\alpha)^{-1}S_{J_{\\alpha}}, q)= ...
+    ...\\sum_{j=0:J_{\\alpha}-1}(1-\\alpha)^{-1}h(W, [(A+BK^{s})^j]^T*q)
     """
     def __init__(self, mat_set, mat_sys, mat_input, mat_k_s):
         """__init__.
@@ -37,25 +46,25 @@ class SupportDecomp():
         """
         self.mat_set = mat_set
         self.mat_a_c = mat_sys + np.matmul(mat_input, mat_k_s)
-        self.mat_a_c_power = np.eye(self.mat_a_c.shape[0])
+        self._mat_a_c_power = np.eye(self.mat_a_c.shape[0])
 
-    def fun_support_decomp(self, vec_q, j_power):
+    def _support_power_transpose(self, vec_q, j_power):
         """fun_support_decomp.
-
+        h(A^j*{W}, q) = h({W}, q'=(A^j)^Tq)
         :param vec_q:
         :param j_power:
         """
-        mat_a_c_j = np.linalg.matrix_power(self.mat_a_c, j_power)
+        mat_a_c_j = np.linalg.matrix_power(self.mat_a_c, j_power)  # FIXME: is iterative matrix multiplication faster?
         vec_direction = np.matlmul(mat_a_c_j.T, vec_q)
         return fun_support(self.mat_set, vec_direction, b_ub=None)
 
-    def fun_support_minkow_sum(self, vec_q, k_alpha):
+    def decomp_support_minkow_sum(self, vec_q, j_alpha):
         """fun_support_minkow_sum.
-
+        h(S, q) = \\sum_{j=0:J-1}h(S_j, q)
         :param vec_q:
-        :param k_alpha:
+        :param j_alpha:
         """
         max_val = 0
-        for j in range(k_alpha):
-            max_val += self.fun_support_decomp(vec_q, j)
+        for j in range(j_alpha):
+            max_val += self._support_power_transpose(vec_q, j)
         return max_val

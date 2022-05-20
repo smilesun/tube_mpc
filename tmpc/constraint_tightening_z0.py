@@ -47,19 +47,19 @@ def is_in_minkowski_sum(mat_set_1, mat_set_2):
 class ConstraintZ0():
     """
     $z_0$ constraint:
-        .. math:: x=x_0 \\in X_0= {{z_0} \\minkowski_sum S_{alpha}}
-        <=> x-z_0 \\in S_{\alpha}, where:
-        S_{\alpha}=(1-\alpha)^{-1}\\minkowski_sum_{i=0:k^{\alpha}-1}(A+BK^{s})^i*W
-        <=> x-z_0 = (1-\alpha)^{-1}\\sum_{i=0:k^{\alpha}-1}(A+BK^{s})^i*w_i
-                  = (1-\alpha)^{-1}\\sum_{i=0:k^{\alpha}-1}A_c^i*w_i
+        x=x_0 \\in X_0= {{z_0} \\(1-\\alpha)^{-1}minkowski_sum S_{\\alpha}}
+        <=> x-z_0 \\in (1-\\alpha)^{-1}S_{\\alpha}, where:
+        S_{\\alpha}=(1-\\alpha)^{-1}\\minkowski_sum_{i=0:J_{\\alpha}-1}(A+BK^{s})^i*{W}
+        <=> x-z_0 = (1-\\alpha)^{-1}\\sum_{i=0:J_{\\alpha}-1}(A+BK^{s})^i*w_i
+                  = (1-\\alpha)^{-1}\\sum_{i=0:J_{\\alpha}-1}A_c^i*w_i
         s.t. w_i \\in W
         <=>
-        x=z_0+(1-\alpha)^{-1}\\sum_{i=0:k^{\alpha}-1}A_c^i*w_i (eq)
+        x=z_0+(1-\\alpha)^{-1}\\sum_{i=0:J_{\\alpha}-1}A_c^i*w_i (eq)
         mat_w * w_i <=1 (ub)
-        <=> Let k^{alpha} = J, l=(1-\alpha)^{-1}
+        <=> Let J_{alpha} = J, l=(1-\\alpha)^{-1}
 
     - equality constraint:
-    [I_z=A_c^0, l*A_c^1, ..., l*A_c^J][z_0^T, w_1^T, ..., w_{J}^T]^T = [0]_z
+    [I_z=A_c^0, l*A_c^1, ..., l*A_c^J][z_0^T, w_{1}^T, ..., w_{J}^T]^T = [0]_z
 
     - inequality constraint:
     [[0]_z, kron(mat_w, ones(1, J))][z_0^T, w_1^T, ..., w_{J}^T]^T <=[1]
@@ -82,7 +82,8 @@ class ConstraintZ0():
 
     def build_equality_constraint(self):
         """
-        [I_z=A_c^0, A_c^1, ..., A_c^J][z_0^T, w_1^T, ..., w_{J}^T]^T = [0]_z
+        [I_z=A_c^0, l*A_c^1, ..., l*A_c^J][z_0^T,
+        w_1^T, ..., w_{J}^T]^T = [0]_z
         """
         mat_power = np.eye(self.mat_a_c.shape[0])
         list_a_c = [mat_power]

@@ -16,7 +16,7 @@ class MPCqpTube(MPCqp):
         w_0, w_1, w_{J-1} auxiliary decision variable,
         does not affect objective
     decision variable in long vector form:
-        v_0, v_1, .., v_{T-1}, z_1, z_2, ..., z_T, z_0, w_0, w_1, .., w{j-1}
+        v_0, v_1, .., v_{T-1}, z_1, z_2, ..., z_T, z_0, w_0, w_1, .., w{J-1}
 
     ## Problem definition:
         Cx+Du<=1
@@ -30,21 +30,24 @@ class MPCqpTube(MPCqp):
             -equality constraint for z_0 (different from nominal MPC):
                 state variable s_0 can be decomposed of J step
                 forward propagation
-                [I_z=A_c^0, l*A_c^1, ..., l*A_c^J]
+                l=(1-\\alpha)^{-1}
+                [I_z=A_{c, (s)}^0, l*A_{c,(s)}^1, ..., l*A_{c,(s)}^J]
                 [z_0^T, w_1^T, ..., w_{J}^T]^T = [0]_z
             - inequality constraint for z_0
                 [[0]_z, kron(mat_w, ones(1, J))]
                 [z_0^T, w_1^T, ..., w_{J}^T]^T <=[1]
 
-        - terminal constraint for z_T:  #FIXME
-            - z_{T+1}=(A+BK^s)*z_T = A_c*z_T
-            - stage constraint Mx_t<=1.
+        - terminal constraint for z_T:
+            - z_{T+1}=(A+BK^s)*z_T = A_{c, (s)}*z_T
+            - stage constraint Mx_t<=1 (special case)
+            - stage constraint Cx_t+Du_t<=1 (general case)
             - to ensure Mx_{T:\\infty} <=1, i.e.
             steps after T satisfies stage constraint
             <=>M(z_{t}+s_{t}) <=1, for t>T
-            s.t. x_{t} = x_{t-1}+(K^z*z_{t-1}+K^s*s_{t-1})
+            s.t. x_{t} = x_{t-1}+(K^z*z_{t-1}+K^s*s_{t-1}) + w_t
             - one step backward reachability:
-                x_t = (A+BK^z)z_{t-1} + s_t \\in X
+                x_t = (A+BK^z)z_{t-1} + s_t
+                x_t \\in X
               <=>two simultaneous constraint
               &M[(A+BK^z)z_{t-1} + s_t]<=1
               &M[z_{t-1} + s_t] <=1
@@ -61,7 +64,7 @@ class MPCqpTube(MPCqp):
               &[M'A_c]z_{t-1}<= 1
               &[M']z_{t-1} <=1
             - extend to infinity steps
-            <=> M_{backward-\\infty, A_c=A+BK^z, max{M*s}}z_{T} <=1
+            <=> M_{A_{c}=A+BK^z}z_{T:\\infty} <=1
 
         -equality constraint for nominal dynamic:
             Az_0 + Bv_0 = z_1
@@ -74,10 +77,10 @@ class MPCqpTube(MPCqp):
                 <=>(C+DK^{z})*z + (C+DK^{s})*s <= 1
                 <=>(C+DK^{z})*z + max_s{(C+DK^{s})*s} <= 1
                 <=> M^{z}*z + max_s {M^{s}*s} <=1 for t=0:\\infty
-                s.t. s \\in S_{J(\\alpha)}
+                s.t. s \\in (1-\\alpha)^{-1}S_{J(\\alpha)}
                 <=> for any i in nrow(M^{s})==nrow(M^{z}):
                     M^{z}[i, :]*z + max_s {M^{s}[i, :]*s} <=1
-                s.t. s \\in S_{J(\\alpha)}
+                s.t. s \\in (1-\\alpha)^{-1}S_{J(\\alpha)}
                 <=> for any i in nrow(M^{s})==nrow(M^{z}):
                     M^{z}[i, :]*z + h(S_{J(\\alpha)}, M^{s}[i, :]^T) <=1
                     M^{z} = C+DK^{z}
@@ -101,9 +104,14 @@ class MPCqpTube(MPCqp):
     def __init__(self, mat_sys, mat_input,
                  mat_q, mat_r, mat_k_s,
                  mat_k_z,
+                 mat_constraint4w,
                  constraint_x_u):
         """__init__.
         :param obj_dyn:
         """
-        mat_m4x =
-        ConstraintZT(mat_m4x)
+        mat_z_terminal = ConstraintZT(
+            constraint_x_u,
+            mat_constraint4w,
+            mat_sys, mat_input,
+            mat_k_s, mat_k_z,
+            j_alpha, tolerance)
