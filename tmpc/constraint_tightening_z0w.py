@@ -28,6 +28,7 @@ so s_t = x_t - z_t where z_t is the decision variable
 s_{t} = (A+BK^{s})s_{t-1} + w_{t-1}
 """
 import numpy as np
+import scipy
 
 
 def is_in_minkowski_sum(mat_set_1, mat_set_2):
@@ -44,7 +45,7 @@ def is_in_minkowski_sum(mat_set_1, mat_set_2):
     """
 
 
-class ConstraintZ0():
+class ConstraintZ0w():
     """
     $z_0$ constraint:
         x=x_0 \\in X_0= {{z_0} \\(1-\\alpha)^{-1}minkowski_sum S_{\\alpha}}
@@ -64,10 +65,19 @@ class ConstraintZ0():
     - inequality constraint:
     [[0]_z, kron(mat_w, ones(1, J))][z_0^T, w_1^T, ..., w_{J}^T]^T <=[1]
     """
-    def __init__(self, mat_a_c, mat_w, dim_sys, j_alpha, alpha):
-        self.mat_a_c = mat_a_c
+    def __init__(self, mat_a_c4s, mat_w, dim_sys, dim_input, j_alpha, alpha):
+        """__init__.
+        :param mat_a_c4s:
+        :param mat_w:
+        :param dim_sys:
+        :param dim_input:
+        :param j_alpha:
+        :param alpha:
+        """
+        self.mat_a_c4s = mat_a_c4s
         self.mat_w = mat_w
         self.dim_sys = dim_sys
+        self.dim_input = dim_input
         self._j_alpha = j_alpha
         self._alpha = alpha
         assert self._alpha < 1
@@ -77,27 +87,48 @@ class ConstraintZ0():
         self.mat_eq = None
         self.b_eq = None
         self.mat_ub = None
+        self.horizon = None
         #
         assert self.mat_w.shape[1] == self.dim_sys
 
-    def build_equality_constraint(self):
+    def build_block_equality_constraint(self, horizon):
         """
-        [I_z=A_c^0, l*A_c^1, ..., l*A_c^J][z_0^T,
+        [I_z=A_c^0, [0]_{dim_sys, dim_sys*horizon,
+        dim_input*horizon},
+        l*A_c^1, ..., l*A_c^J][z_0^T, z_{1:T}, v_{0:T-1}
         w_1^T, ..., w_{J}^T]^T = [0]_z
         """
-        mat_power = np.eye(self.mat_a_c.shape[0])
+        if self.horizon == horizon:
+            return self.mat_eq, self.b_eq
+        mat_power = np.eye(self.mat_a_c4s.shape[0])
         list_a_c = [mat_power]
         mat_power *= self._magnify
         for _ in range(self._j_alpha):
-            mat_power = np.matmul(mat_power, self.mat_a_c)
+            mat_power = np.matmul(mat_power, self.mat_a_c4s)
             list_a_c.append(mat_power)
-        self.mat_eq = np.hstack(list_a_c)
+        mat_eq4w = np.hstack(list_a_c)
+        self.mat_eq = np.hstack(
+            [np.eye(self.dim_sys),
+             np.zeros((self.dim_sys, horizon*(self.dim_sys + self.dim_input))),
+             mat_eq4w])
         self.b_eq = np.zeros((self.mat_eq.shape[0], 1))
+        return self.mat_eq, self.b_eq
 
-    def build_inequality_constraint(self):
+    def build_block_inequality_constraint4w(self, horizon):
         """
-        [[0]_z, kron(mat_w, ones(1, J))][z_0^T, w_1^T, ..., w_{J}^T]^T <=[1]
+        horizon=4, dim_sys=2, dim_input=1
+        [00,00,00,00]_z[0,0,0]_v[xx,00,00]_w
+        [00,00,00,00]_z[0,0,0]_v[00,xx,00]_w
+        [00,00,00,00]_z[0,0,0]_v[00,00,xx]_w
+        ---
+        Not the following!
+        [[0]_{}, kron(mat_w, ones(1, J))]*
+        [z_0^T, z_{1:T}, v_{0:T-1}, w_1^T, ..., w_{J}^T]^T <=[1]
         """
-        mat_0 = np.zeros((self.dim_sys, self.dim_sys))
-        mat_w = np.kron(self.mat_w, np.ones(1, self._j_alpha))
-        self.mat_ub = np.hstack([mat_0, mat_w])
+        mat_0 = np.zeros((
+            self.dim_sys*self._j_alpha,
+            (horizon+1)*self.dim_sys + horizon*self.dim_input))
+        list_w = [self.mat_w for _ in range(self._j_alpha)]
+        block_mat_w = scipy.linalg.block_diag(*list_w)
+        self.mat_ub = np.hstack([mat_0, block_mat_w])
+        return self.mat_ub
