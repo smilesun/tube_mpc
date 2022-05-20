@@ -143,9 +143,9 @@ Z_k = X_k - S_k \\in X_k - S_{\\infty} = {Z_k}^{worst}
 
         :param i:
         """
-        vec_q = self.mat_constraint4s[i, :]
+        vec_q = np.transpose(self.mat_constraint4s[i, :])
         vec_z = self.mat_constraint4z[i, :]
-        h_support = self.obj_support_decomp.fun_support_minkow_sum(
+        h_support = self.obj_support_decomp.decomp_support_minkow_sum(
             vec_q, self.j_alpha)
         return vec_z / (1-h_support)   # FIXME: check divide by zero?
 

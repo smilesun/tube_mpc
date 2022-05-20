@@ -1,7 +1,10 @@
 import numpy as np
+import scipy
+from tmpc.constraint_tightening import ConstraintTightening
 from tmpc.constraint_tightening_z_terminal import ConstraintZT
 from tmpc.constraint_eq_ldyn import ConstraintEqLdyn
 from tmpc.constraint_block_horizon_lqr_solver import LqrQp
+from tmpc.support_decomp import SupportDecomp
 from tmpc.mpc_qp import MPCqp
 
 
@@ -18,6 +21,16 @@ class MPCqpTube(MPCqp):
     decision variable in long vector form:
         v_0, v_1, .., v_{T-1}, z_1, z_2, ..., z_T, z_0, w_0, w_1, .., w{J-1}
 
+    ## Matrix formulation:
+    Finally, a matrix of the form
+    M_{eq} [z_0^T, z_{1:T}^T, v_{0:T-1}^T, w_{1:J-1}^T]^T = b
+    M_{ub} [z_0^T, z_{1:T}^T, v_{0:T-1}^T, w_{1:J-1}^T]^T <= [1]
+
+    M_{eq} connect different decision variables
+    M_{ub} will be in block diagonal form, each block does not have to be in
+    the same dimension. Which means, each block can be constraints of the same
+    applied to each stage variable, but different constraint can exsist.
+
     ## Problem definition:
         Cx+Du<=1
         C(z+s)+D(K^{z}*z+K^{s}s) <= 1
@@ -30,18 +43,21 @@ class MPCqpTube(MPCqp):
             -equality constraint for z_0 (different from nominal MPC):
                 state variable s_0 can be decomposed of J step
                 forward propagation
-                l=(1-\\alpha)^{-1}
-                [I_z=A_{c, (s)}^0, l*A_{c,(s)}^1, ..., l*A_{c,(s)}^J]
-                [z_0^T, w_1^T, ..., w_{J}^T]^T = [0]_z
+                define l=(1-\\alpha)^{-1}
+                [I_z=A_{c, (s)}^0, [0]_{T*dim_sys+T*dim_input},...
+                ...l*A_{c,(s)}^1, ..., l*A_{c,(s)}^{J-1}]
+                [z_0^T, z_{1:T}, v_{0:T-1}, w_1^T, ..., w_{J-1}^T]^T = ...\\
+                ...[0]_{dim_sys,1}
             - inequality constraint for z_0
-                [[0]_z, kron(mat_w, ones(1, J))]
-                [z_0^T, w_1^T, ..., w_{J}^T]^T <=[1]
+                [[0]_{T*dim_sys+T*dim_input}, kron(mat_w, ones(1, J-1))]
+                [z_0^T, z_{0:T}, v_{0:T-1}, w_1^T, ...,
+                ...., w_{J-1}^T]^T <=[1]_{dim_sys, 1}
 
         - terminal constraint for z_T:
             - z_{T+1}=(A+BK^s)*z_T = A_{c, (s)}*z_T
             - stage constraint Mx_t<=1 (special case)
             - stage constraint Cx_t+Du_t<=1 (general case)
-            - to ensure Mx_{T:\\infty} <=1, i.e.
+            - to ensure Mx_{T:\\infty} <=1, (special case) i.e.
             steps after T satisfies stage constraint
             <=>M(z_{t}+s_{t}) <=1, for t>T
             s.t. x_{t} = x_{t-1}+(K^z*z_{t-1}+K^s*s_{t-1}) + w_t
@@ -105,13 +121,65 @@ class MPCqpTube(MPCqp):
                  mat_q, mat_r, mat_k_s,
                  mat_k_z,
                  mat_constraint4w,
-                 constraint_x_u):
+                 constraint_x_u,
+                 alpha_ini,
+                 tolerance):
         """__init__.
         :param obj_dyn:
         """
-        mat_z_terminal = ConstraintZT(
+        self.j_alpha = self.get_j_from_alpha(alpha_ini)
+        self.builder_z_terminal = ConstraintZT(
             constraint_x_u,
             mat_constraint4w,
             mat_sys, mat_input,
             mat_k_s, mat_k_z,
-            j_alpha, tolerance)
+            self.j_alpha,
+            tolerance)
+
+        self.mat_ub_block = None
+        self.horizon = None
+        self.stage_mat4z0 = self.builder_z_terminal.mat4z_terminal
+
+        self.mat_constraint4z = constraint_x_u.mat_x + \
+            np.matmul(constraint_x_u.mat_u, mat_k_z)
+        self.mat_constraint4s = constraint_x_u.mat_x + \
+            np.matmul(constraint_x_u.mat_u, mat_k_s)
+
+        self.obj_support_decomp = SupportDecomp(
+            mat_set=mat_constraint4w,
+            mat_sys=mat_sys,
+            mat_input=mat_input,
+            mat_k_s=mat_k_s)
+
+        self.j_alpha = self.get_j_from_alpha(alpha_ini)
+
+        self.stage_mat4z = ConstraintTightening(
+            self.mat_constraint4z,
+            self.mat_constraint4s,
+            self.obj_support_decomp,
+            self.j_alpha)()
+
+    def get_j_from_alpha(self, alpha_ini):
+        return 4  # FIXME
+
+    def build_mat_block_eq(self):
+        """
+        """
+
+    def build_mat_block_ub(self, horizon, j_alpha):
+        """
+        M_{ub} [z_0^T, z_{1:T}^T, v_{0:T-1}^T, w_{1:J-1}^T]^T <= [1]
+        M_{eq} connect different decision variables
+        M_{ub} will be in block diagonal form, each block does not have to be
+        in the same dimension. Which means, each block can be constraints of
+        the same applied to each stage variable, but different constraint can
+        exsist.
+        """
+        list_block_z = [self.stage_mat4z0]
+        for _ in range(horizon):
+            list_block_z.append(self.stage_mat4z)
+        mat_left = scipy.linalg.block_diag(*list_block_z)
+        mat_right = np.zeros((
+            mat_left.shape[0],
+            horizon*(self.dim_input+j_alpha)))
+        self.mat_ub_block = np.hstack((mat_left, mat_right))

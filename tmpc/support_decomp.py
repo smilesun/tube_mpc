@@ -55,7 +55,7 @@ class SupportDecomp():
         :param j_power:
         """
         mat_a_c_j = np.linalg.matrix_power(self.mat_a_c, j_power)  # FIXME: is iterative matrix multiplication faster?
-        vec_direction = np.matlmul(mat_a_c_j.T, vec_q)
+        vec_direction = np.matmul(mat_a_c_j.T, vec_q)
         return fun_support(self.mat_set, vec_direction, b_ub=None)
 
     def decomp_support_minkow_sum(self, vec_q, j_alpha):
