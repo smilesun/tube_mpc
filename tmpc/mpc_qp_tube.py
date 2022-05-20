@@ -178,6 +178,16 @@ class MPCqpTube(MPCqp):
             self.mat_input,
             self.mat_sys)
 
+    def __call__(self, x, horizon, j_alpha):
+        mat_ub, b_ub = self.build_mat_block_ub(horizon=horizon, j_alpha=j_alpha)
+        mat_eq, b_eq = self.build_mat_block_eq(x=x, horizon=horizon)
+        vec = quadprog_solve_qp(
+            P=,
+            A_ub=mat_ub,
+            b_ub=b_ub,
+            A_eq=mat_eq,
+            b_eq=b_eq)
+
     def build_mat_block_eq(self, horizon, x):
         """
         z_1=A*z_0 + Bv_0
