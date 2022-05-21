@@ -196,7 +196,8 @@ class MPCqpTube(MPCqp):
             b_ub=b_ub,
             A_eq=mat_eq,
             b_eq=b_eq)
-        return vec
+        pos = (horizon + 1)*(self.dim_sys)
+        return vec[pos:pos+self.dim_input]
 
     def build_mat_block_eq(self, horizon, x):
         """

@@ -39,3 +39,4 @@ def test_tube():
     x = np.array([[0.01, 0.01]]).T
     mpctube.build_mat_block_eq(x=x, horizon=horizon)
     mpctube(x, horizon, j_alpha)
+    x = np.array([[0.1, 0.1]]).T

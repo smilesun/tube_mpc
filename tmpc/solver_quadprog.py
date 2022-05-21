@@ -60,8 +60,25 @@ def quadprog_solve_qp(P, A_ub, b_ub, A_eq=None, b_eq=None, q=None):
                             qp_constraint_mat_transpose,
                             qp_constraint_rhs_vec_row,
                             num_eq)
-
-    return rst
+    """
+    Returns
+    -------
+    x : array, shape=(n,)
+        vector containing the solution of the quadratic programming problem.
+    f : float
+        the value of the quadratic function at the solution.
+    xu : array, shape=(n,)
+        vector containing the unconstrained minimizer of the quadratic function
+    iterations : tuple
+        2-tuple. the first component contains the number of iterations the
+        algorithm needed, the second indicates how often constraints became
+        inactive after becoming active first.
+    lagrangian : array, shape=(m,)
+        vector with the Lagragian at the solution.
+    iact : array
+        vector with the indices of the active constraints at the solution.
+    """
+    return rst[0]  # only return the decision variable
 
 
 def test_qp():
@@ -71,4 +88,4 @@ def test_qp():
     b_ub = np.array([3., 2., -2., 1]).reshape((4, 1))
     quadprog_solve_qp(P=P, A_ub=A_ub, b_ub=b_ub)
     q = -np.dot(M.T, np.array([3., 2., 3.]))
-    quadprog_solve_qp(P=P, A_ub=A_ub, b_ub=b_ub, q=q)
+    rst = quadprog_solve_qp(P=P, A_ub=A_ub, b_ub=b_ub, q=q)
