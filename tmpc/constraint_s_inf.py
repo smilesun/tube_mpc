@@ -100,6 +100,8 @@ class ConstraintSAlpha():
     def __init__(self, mat_sys, mat_input, mat_k_s, mat_w):
         """__init__."""
         self.mat_a_c = mat_sys + np.matmul(mat_input, mat_k_s)
+        vec, _ = np.linalg.eig(self.mat_a_c)
+        assert all(np.abs(vec) < 1)
         self.mat_a_c_norm = np.linalg.norm(self.mat_a_c)
         self.mat_w = mat_w
         self.s_alpha = None
@@ -197,4 +199,4 @@ class ConstraintSAlpha():
         return is_implicit_subset_explicit(
             mat_a_set_y=mat_a_set_y,
             mat_x_set_y=mat_x_set_y,
-            mat_z_set_n=mat_z_set_n)
+            mat_n_set_explicit=mat_z_set_n)
