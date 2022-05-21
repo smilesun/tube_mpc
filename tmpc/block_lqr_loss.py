@@ -44,7 +44,7 @@ class LqrQpLoss():
         block_q = self.gen_loss_block_q(mat_q, horizon)
         block_r = self.gen_loss_block_r(mat_r, horizon)
         block_w = self.gen_loss_block_w(mat_q, j_alpha)
-        return scipy.linalg.block_diag(block_q, block_r)
+        return scipy.linalg.block_diag(block_q, block_r, block_w)
 
     def gen_loss_block_w(self, mat_q, j_alpha):
         """

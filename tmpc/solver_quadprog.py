@@ -53,12 +53,14 @@ def quadprog_solve_qp(P, A_ub, b_ub, A_eq=None, b_eq=None, q=None):
     qp_lin_cost_vec_row = -1.0 * q
     qp_constraint_mat_transpose = -1.0 * numpy.vstack(list_mat).T
     qp_constraint_rhs_vec_row = -1.0 * numpy.vstack(list_rhs).T.squeeze()
+
     rst = quadprog.solve_qp(mat_pos_def,
                             qp_lin_cost_vec_row,
                             qp_constraint_mat_transpose,
                             qp_constraint_rhs_vec_row,
                             num_eq)
-    return rst[0]
+
+    return rst
 
 
 def test_qp():

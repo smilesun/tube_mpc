@@ -6,6 +6,8 @@ from tmpc.constraint_tightening_z0w import ConstraintZ0w
 from tmpc.constraint_eq_ldyn_1_terminal import ConstraintEqLdyn1T
 from tmpc.support_decomp import SupportDecomp
 from tmpc.mpc_qp import MPCqp
+from tmpc.block_lqr_loss import LqrQpLoss
+from tmpc.solver_quadprog import quadprog_solve_qp
 
 
 class MPCqpTube(MPCqp):
@@ -128,6 +130,8 @@ class MPCqpTube(MPCqp):
         """__init__.
         :param obj_dyn:
         """
+        self.mat_q = mat_q
+        self.mat_r = mat_r
         self.mat_ub_block = None
         self.b_ub = None
         self.horizon = None
@@ -138,6 +142,7 @@ class MPCqpTube(MPCqp):
         self.dim_input = mat_input.shape[1]
         self.j_alpha = j_alpha
         mat_a_c4s = mat_sys + np.matmul(mat_input, mat_k_s)
+        self.qp_loss = LqrQpLoss(mat_q, mat_r)
 
         self.builder_z_0w = ConstraintZ0w(
             mat_a_c4s=mat_a_c4s,
@@ -179,14 +184,19 @@ class MPCqpTube(MPCqp):
             self.mat_sys)
 
     def __call__(self, x, horizon, j_alpha):
-        mat_ub, b_ub = self.build_mat_block_ub(horizon=horizon, j_alpha=j_alpha)
-        mat_eq, b_eq = self.build_mat_block_eq(x=x, horizon=horizon)
+        mat_ub, b_ub = self.build_mat_block_ub(
+            horizon=horizon, j_alpha=j_alpha)
+        mat_eq, b_eq = self.build_mat_block_eq(
+            x=x, horizon=horizon)
+        mat_loss = self.qp_loss.gen_loss(
+            self.mat_q, self.mat_r, horizon, j_alpha)
         vec = quadprog_solve_qp(
-            P=,
+            P=mat_loss,
             A_ub=mat_ub,
             b_ub=b_ub,
             A_eq=mat_eq,
             b_eq=b_eq)
+        return vec
 
     def build_mat_block_eq(self, horizon, x):
         """

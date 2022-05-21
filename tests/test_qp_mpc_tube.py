@@ -38,3 +38,4 @@ def test_tube():
         + j_alpha * prob.dim_sys
     x = np.array([[0.01, 0.01]]).T
     mpctube.build_mat_block_eq(x=x, horizon=horizon)
+    mpctube(x, horizon, j_alpha)
