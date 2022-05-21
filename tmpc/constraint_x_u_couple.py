@@ -50,3 +50,9 @@ class ConstraintStageXU():
         (C^T + D^TK)x <=1
         """
         return self.mat_x + np.matmul(self.mat_u, mat_k)
+
+    def verify_x(self, vec_x):
+        assert all(np.matmul(self.mat_x, vec_x) < 1)
+
+    def verify_u(self, vec_u):
+        assert all(np.matmul(self.mat_u, vec_u) < 1)
