@@ -38,6 +38,7 @@ def quadprog_solve_qp(P, A_ub, b_ub, A_eq=None, b_eq=None, q=None):
             all further as inequality constraints (defaults to 0).
             """
     mat_pos_def = .5 * (P + P.T)   # make sure P is symmetric
+    mat_pos_def = mat_pos_def + np.eye(P.shape[0]) * 1e-3
     list_mat = []
     list_rhs = []
     num_eq = 0
