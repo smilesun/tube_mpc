@@ -2,6 +2,7 @@ import numpy as np
 from tmpc.mpc_qp_tube import MPCqpTube
 from tmpc.constraint_x_u_couple import ConstraintStageXU
 from tmpc.utils_case import Probset
+import control
 
 
 def test_tube():
@@ -19,12 +20,15 @@ def test_tube():
         mat_x=mat_x,
         mat_u=mat_u)
 
+    mat_k_s = control.place(prob.mat_sys, prob.mat_input, [-0.2, -0.1])
+    mat_k_s = -1.0 * mat_k_s
+
     mpctube = MPCqpTube(
         mat_sys, mat_input,
         mat_q=prob.mat_q,
         mat_r=prob.mat_r,
-        mat_k_s=prob.mat_k,
-        mat_k_z=prob.mat_k,
+        mat_k_s=mat_k_s,
+        mat_k_z=mat_k_s,
         mat_constraint4w=mat_constraint4w,
         constraint_x_u=constraint_x_u,
         j_alpha=3,

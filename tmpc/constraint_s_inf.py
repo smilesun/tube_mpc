@@ -97,17 +97,19 @@ class ConstraintSAlpha():
     # Thus
     # S_J \\subset S_{\\infty} \\subset (1-\\alpha)^{-1} S_J
     """
-    def __init__(self, mat_sys, mat_input, mat_k_s, mat_w):
+    def __init__(self, mat_sys, mat_input, mat_k_s, mat_w, max_iter):
         """__init__."""
         self.mat_a_c = mat_sys + np.matmul(mat_input, mat_k_s)
-        vec, _ = np.linalg.eig(self.mat_a_c)
-        assert all(np.abs(vec) < 1)
-        self.mat_a_c_norm = np.linalg.norm(self.mat_a_c)
+        eigs, _ = np.linalg.eig(self.mat_a_c)
+        assert all(np.abs(eigs) < 1)
+        # self.mat_a_c_norm = np.linalg.norm(self.mat_a_c)  # bigger than one
+        self.mat_a_c_norm = max(np.abs(eigs))
         self.mat_w = mat_w
         self.s_alpha = None
         # pair of _alpha, _j_power
         self._alpha = None
         self._j_power = None
+        self.max_iter = max_iter
         # implicit representation of
         # S_J \\subset S_{\\infty} \\subset (1-\alpha)^{-1} S_J
 
@@ -131,13 +133,18 @@ class ConstraintSAlpha():
         """cal_power_given_alpha.
         ||(A+BK^{s})^JW||<=||(A+BK^{s})^J||*||W||
         <={||(A+BK^{s})||}^J*||W||
-        Let {||(A+BK^{s})||}^J <=\\alpha W
-        J=log_{||(A+BK^{s})||}{\\alpha}
+        In order to have  {||(A+BK^{s})||}^J||W|| <=\\alpha ||W||
+        let J>log_{||(A+BK^{s})||}{\\alpha}
+        -------
+        log_{||(A+BK^{s})||}{\\alpha} = log{\\alpha}/log_{||(A+BK^{s})||}
         """
         self._alpha = alpha
-        denom = np.log(alpha)
-        nom = np.log(self.mat_a_c_norm)
-        j_power = int(denom / nom) + 1
+        nom = np.log(alpha)
+        denom = np.log(self.mat_a_c_norm)
+        j_power = int(nom / denom) + 1
+        for _ in range(self.max_iter):
+            if not self.verify_inclusion(alpha, j_power):
+                j_power += 1
         assert self.verify_inclusion(alpha, j_power)
         return j_power
 

@@ -32,7 +32,6 @@ def is_implicit_subset_explicit(mat_a_set_y, mat_x_set_y, mat_n_set_explicit):
             mat_poly_set=mat_x_set_y,
             vec_half_plane_le=mat_n_times_a[i, :],
             b_ub=None)
-        breakpoint()
         if max_val > 1:
             return False
     return True

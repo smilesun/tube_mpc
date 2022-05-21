@@ -1,9 +1,11 @@
 import numpy as np
+import control
 from tmpc.mpc_qp_tube import MPCqpTube
 from tmpc.constraint_x_u_couple import ConstraintStageXU
 from tmpc.utils_case import Probset
 from tmpc.simulate import Exp
 from tmpc.dyn_sys import DynSysL
+from tmpc.constraint_s_inf import ConstraintSAlpha
 
 
 def test_exp():
@@ -21,23 +23,36 @@ def test_exp():
         mat_x=mat_x,
         mat_u=mat_u)
 
+    mat_k_s = control.place(prob.mat_sys, prob.mat_input, [-0.2, -0.1])
+    mat_k_s = -1.0 * mat_k_s
+
+    constraint_j_alpha = ConstraintSAlpha(
+        mat_sys=prob.mat_sys,
+        mat_input=prob.mat_input,
+        mat_k_s=mat_k_s,
+        mat_w=mat_constraint4w,
+        max_iter=100)
+    alpha_ini = 0.001
+    j_alpha = constraint_j_alpha.cal_power_given_alpha(alpha_ini)
+
     mpctube = MPCqpTube(
         mat_sys, mat_input,
         mat_q=prob.mat_q,
         mat_r=prob.mat_r,
-        mat_k_s=prob.mat_k,
-        mat_k_z=prob.mat_k,
+        mat_k_s=mat_k_s,
+        mat_k_z=mat_k_s,
         mat_constraint4w=mat_constraint4w,
         constraint_x_u=constraint_x_u,
-        j_alpha=3,
-        alpha_ini=0.01,
+        j_alpha=j_alpha,
+        alpha_ini=alpha_ini,
         tolerance=0.01)
     horizon = 3
-    j_alpha = 3
+
     mpctube.build_mat_block_ub(horizon=horizon, j_alpha=j_alpha)
     assert mpctube.mat_ub_block.shape[1] == \
         horizon*(prob.dim_input + prob.dim_sys) + prob.dim_sys \
         + j_alpha * prob.dim_sys
+
     x = np.array([[0.01, 0.01]]).T
     dyn = DynSysL(dim_sys=prob.dim_sys,
                   dim_u=prob.dim_input,
@@ -45,4 +60,5 @@ def test_exp():
                   constraint_x_u=constraint_x_u,
                   max_w=0)
     exp = Exp(dyn, controller=mpctube)
-    exp.run(200, 3, j_alpha=3)
+    exp.run(2, 3, j_alpha=j_alpha)
+    exp.run(200, 3, j_alpha=j_alpha)
