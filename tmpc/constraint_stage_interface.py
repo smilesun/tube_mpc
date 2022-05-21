@@ -1,3 +1,6 @@
+"""
+Interface for stage constraint
+"""
 
 
 class ConstraintUbStage():
