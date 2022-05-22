@@ -15,7 +15,7 @@ class Exp():
             try:
                 vec_u = self.controller(self.dyn.x, horizon)
             except Exception as e:
-                info = "controller error at iteration %d: " % i
+                info = "controller error at iteration %d: at state %s" % (i, str(self.dyn.x))
                 raise RuntimeError(info + str(e))
             self.dyn.step(vec_u)
             print("action:")

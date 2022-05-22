@@ -8,7 +8,7 @@ from tmpc.dyn_sys import DynSysL
 
 
 def test_exp():
-    horizon = 3
+    horizon = 8
     prob = Probset()
 
     constraint_x_u = ConstraintStageXU(
