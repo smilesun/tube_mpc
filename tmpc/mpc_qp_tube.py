@@ -121,12 +121,11 @@ class MPCqpTube(MPCqp):
             [z_0, z_1, ..., z_T, w_{1:T}, v_{0:T-1}] < 1
     """
     def __init__(self, mat_sys, mat_input,
-                 mat_q, mat_r, mat_k_s,
-                 mat_k_z,
+                 mat_q, mat_r,
+                 mat_k_s, mat_k_z,
                  mat_constraint4w,
                  constraint_x_u,
                  alpha_ini,
-                 mat_w,
                  tolerance, max_iter=100):
         """__init__.
         :param obj_dyn:
@@ -146,7 +145,7 @@ class MPCqpTube(MPCqp):
             mat_sys=self.mat_sys,
             mat_input=self.mat_input,
             mat_k_s=mat_k_s,
-            mat_w=mat_w,
+            mat_w=mat_constraint4w,
             max_iter=max_iter)
         j_alpha = constraint_j_alpha.cal_power_given_alpha(alpha_ini)
         self.j_alpha = j_alpha
@@ -193,7 +192,7 @@ class MPCqpTube(MPCqp):
 
     def __call__(self, x, horizon):
         mat_ub, b_ub = self.build_mat_block_ub(
-            horizon=horizon, j_alpha=self.j_alpha)
+            horizon=horizon)
         mat_eq, b_eq = self.build_mat_block_eq(
             x=x, horizon=horizon)
         mat_loss = self.qp_loss.gen_loss(
@@ -236,7 +235,7 @@ class MPCqpTube(MPCqp):
 
         return block_mat_eq, block_b_eq
 
-    def build_mat_block_ub(self, horizon, j_alpha):
+    def build_mat_block_ub(self, horizon):
         """
         (M_{eq} connect different decision variables)
         M_{ub} [z_0^T, z_{1:T}^T, v_{0:T-1}^T, w_{0:J-1}^T]^T <= [1]
@@ -265,7 +264,7 @@ class MPCqpTube(MPCqp):
         mat_left = scipy.linalg.block_diag(*list_block_z)
         mat_right = np.zeros((
             mat_left.shape[0],
-            horizon*self.dim_input + self.dim_sys*j_alpha))
+            horizon*self.dim_input + self.dim_sys*self.j_alpha))
         mat_ub_block_zv = np.hstack((mat_left, mat_right))
         block_mat4w = self.builder_z_0w.build_block_inequality_constraint4w(
             horizon)

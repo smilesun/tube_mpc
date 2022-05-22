@@ -29,7 +29,6 @@ def test_exp():
         mat_k_z=mat_k_s,
         mat_constraint4w=prob.mat_w,
         constraint_x_u=constraint_x_u,
-        mat_w=prob.mat_w,
         alpha_ini=0.01,
         tolerance=0.01)
 
