@@ -6,7 +6,7 @@ from tmpc.constraint_tightening_z0w import ConstraintZ0w
 from tmpc.constraint_eq_ldyn_1_terminal import ConstraintEqLdyn1T
 from tmpc.support_decomp import SupportDecomp
 from tmpc.mpc_qp import MPCqp
-from tmpc.block_lqr_loss import LqrQpLoss
+from tmpc.block_lqr_loss import LqrQpLossTube
 from tmpc.solver_quadprog import quadprog_solve_qp
 from tmpc.constraint_s_inf import ConstraintSAlpha
 
@@ -140,7 +140,7 @@ class MPCqpTube(MPCqp):
         self.mat_input = mat_input
         self.mat_sys = mat_sys
         self.dim_input = mat_input.shape[1]
-        self.qp_loss = LqrQpLoss(mat_q, mat_r)
+        self.qp_loss = LqrQpLossTube(mat_q, mat_r)
         constraint_j_alpha = ConstraintSAlpha(
             mat_sys=self.mat_sys,
             mat_input=self.mat_input,

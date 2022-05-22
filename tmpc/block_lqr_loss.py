@@ -40,6 +40,13 @@ class LqrQpLoss():
         # NOTE: not return np.kron(mat_r, np.eye(horizon))
         return np.kron(np.eye(horizon), mat_r)
 
+    def gen_loss(self, mat_q, mat_r, horizon):
+        block_q = self.gen_loss_block_q(mat_q, horizon)
+        block_r = self.gen_loss_block_r(mat_r, horizon)
+        return scipy.linalg.block_diag(block_q, block_r)
+
+
+class LqrQpLossTube(LqrQpLoss):
     def gen_loss(self, mat_q, mat_r, horizon, j_alpha):
         block_q = self.gen_loss_block_q(mat_q, horizon)
         block_r = self.gen_loss_block_r(mat_r, horizon)

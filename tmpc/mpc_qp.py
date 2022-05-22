@@ -1,7 +1,13 @@
 import numpy as np
-from tmpc.constraint_pos_inva_terminal import PosInvaTerminalSetBuilder
 from tmpc.constraint_eq_ldyn import ConstraintEqLdyn
-from tmpc.constraint_block_horizon_lqr_solver import LqrQp
+from tmpc.constraint_block_horizon_terminal import \
+    ConstraintBlockHorizonTerminal
+from tmpc.constraint_block_horizon_stage_x_u import \
+    ConstraintHorizonBlockStageXU
+from tmpc.solver_quadprog import quadprog_solve_qp
+from tmpc.block_lqr_loss import LqrQpLoss
+
+
 
 
 class MPCqp():
@@ -39,13 +45,16 @@ class MPCqp():
             mat_input=self.mat_input,
             mat_sys=self.mat_sys)
         #
-        self.lqr_solver = LqrQp(
-            constraint_x_u=self.constraint_x_u,
-            mat_q=self.mat_q,
-            mat_r=self.mat_r,
+        self.constraint_terminal = ConstraintBlockHorizonTerminal(
+            constraint_x_u,
             mat_k=mat_k,
-            mat_sys=self.mat_sys,
-            mat_input=self.mat_input)
+            mat_sys=mat_sys,
+            mat_input=mat_input)
+        self.constraint_stage = ConstraintHorizonBlockStageXU(
+            mat_state_ub=constraint_x_u.mat_xu_x,
+            mat_u_ub=constraint_x_u.mat_xu_u)
+
+        self.qp_loss = LqrQpLoss(mat_q, mat_r)
 
     def __call__(self, x_obs, horizon):
         """__call__.
@@ -53,11 +62,35 @@ class MPCqp():
         """
         dim_sys = x_obs.shape[0]
         mat_dyn_eq, mat_b_dyn_eq = self.eq_constraint_builder(x_obs, horizon)
-        vec_x_u = self.lqr_solver(
-            horizon,
-            mat_dyn_eq,  # functional constraint
-            mat_b_dyn_eq  # functional constraint
-            )
+        block_mat_terminal_a, block_mat_terminal_b = \
+            self.constraint_terminal(horizon)
+
+        block_mat_stage_a, block_mat_stage_b = \
+            self.constraint_stage(horizon)
+
+        """
+        # there can be more inequality constraint than number of state!
+        """
+        block_mat_a_ub = block_mat_terminal_a
+        block_mat_a_ub = np.vstack([block_mat_stage_a,
+                                    block_mat_terminal_a])
+        """
+        [block_m1,
+         block_m2,
+         block_m3][x_{0:T}, u_{0:T-1}]^T<=[ones(2T+1, 1)^T,
+                                           ones(2T+1, 1)^T,
+                                           ones(2T+1, 1)^T]^T
+        """
+        block_mat_b_ub = np.vstack([block_mat_stage_b,
+                                    block_mat_terminal_b])
+
+        block_mat_loss = self.qp_loss.gen_loss(self.mat_q, self.mat_r, horizon)
+        vec_x_u = quadprog_solve_qp(
+            P=block_mat_loss,
+            A_ub=block_mat_a_ub,
+            b_ub=block_mat_b_ub,
+            A_eq=mat_dyn_eq,
+            b_eq=mat_b_dyn_eq)
         pos_u = (1+horizon)*dim_sys-1
         vec_u = vec_x_u[pos_u:pos_u+self.dim_input]
         return vec_u.reshape((len(vec_u), 1))
