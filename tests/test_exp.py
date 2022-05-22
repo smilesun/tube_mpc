@@ -29,7 +29,7 @@ def test_exp():
         mat_k_z=mat_k_s,
         mat_constraint4w=prob.mat_w,
         constraint_x_u=constraint_x_u,
-        alpha_ini=0.0001,
+        alpha_ini=1e-6,
         tolerance=1e-5)
 
     x = np.array([[-1, -1]]).T

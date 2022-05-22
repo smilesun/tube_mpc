@@ -12,7 +12,11 @@ class Exp():
             print("iteration", i)
             print("position:")
             print(self.dyn.x)
-            vec_u = self.controller(self.dyn.x, horizon)
+            try:
+                vec_u = self.controller(self.dyn.x, horizon)
+            except Exception as e:
+                info = "controller error at iteration %d: " % i
+                raise RuntimeError(info + str(e))
             self.dyn.step(vec_u)
             print("action:")
             print(self.dyn.u)

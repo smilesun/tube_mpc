@@ -186,6 +186,31 @@ class MPCqpTube(MPCqp):
             self.obj_support_decomp,
             self.j_alpha)()
 
+        """
+        -constraint tightening for each stage v
+            original stage constraint for u_t
+            Cx+Du<=1: take the part only for u
+                Mu_t <=1
+                <=>
+                M(v_{t}+K^{s}*s_t) <=[1]
+                <=>M*v_t + MK^{(s)}*s_t <= [1]
+                <=>M*v_t + max_{s_t}{MK^{(s_t)}*s_t} <= [1]
+                for t=0:\\infty
+                s.t. s_t \\in (1-\\alpha)^{-1}S_{J(\\alpha)}
+               <=> for any i in nrow(M):
+                    M[i, :]*v_t + max_s {MK^{(s_t)}[i, :]*s} <=1
+                s.t. s \\in (1-\\alpha)^{-1}S_{J(\\alpha)}
+               <=> for any i in nrow(M):
+                    M[i, :]*v_t + h(S_{J(\\alpha)}, MK^{(s_t)}[i, :]^T) <=1
+        """
+        mat_constraint_vks = np.matmul(constraint_x_u.mat_only_u, mat_k_s)
+
+        self.stage_mat4v = ConstraintTightening(
+            constraint_x_u.mat_only_u,
+            mat_constraint_vks,
+            self.obj_support_decomp,
+            self.j_alpha)()
+
         self.builder_eq4zv = ConstraintEqLdyn1T(
             self.mat_input,
             self.mat_sys)
@@ -250,7 +275,10 @@ class MPCqpTube(MPCqp):
         [00,xx,00,00]_z[0,0,0]_v[00,00,00]_w
         [00,00,xx,00]_z[0,0,0]_v[00,00,00]_w
         [00,00,00,xx]_z[0,0,0]_v[00,00,00]_w
-        # no inequality constraint for v
+
+        # !!!!!!There is also inequality constraint for v,
+        # need constraint tightening!!!!!
+
         # inequality constraint for w
         [00,00,00,00]_z[0,0,0]_v[xx,00,00]_w
         [00,00,00,00]_z[0,0,0]_v[00,xx,00]_w
@@ -276,5 +304,17 @@ class MPCqpTube(MPCqp):
         block_mat4w = self.builder_z_0w.build_block_inequality_constraint4w(
             horizon)
         self.mat_ub_block = np.vstack([mat_ub_block_zv, block_mat4w])
+        #
+        list_constraint_v = []
+        for _ in range(horizon):
+            list_constraint_v.append(self.stage_mat4v)
+        mat_v_middle = scipy.linalg.block_diag(*list_constraint_v)
+        mat_v_left = np.zeros((
+            mat_v_middle.shape[0], self.dim_sys*(horizon+1)))
+        mat_v_right = np.zeros((
+            mat_v_middle.shape[0], self.dim_sys*(self.j_alpha)))
+        mat_v = np.hstack([mat_v_left, mat_v_middle, mat_v_right])
+        self.mat_ub_block = np.vstack([self.mat_ub_block, mat_v])
+        #
         self.b_ub = np.ones((self.mat_ub_block.shape[0], 1))
         return self.mat_ub_block, self.b_ub
