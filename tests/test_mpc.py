@@ -32,10 +32,9 @@ def test_mpc():
 
     mpc_qp(prob.x_init, horizon)
 
-    x = np.array([[0.2, 0.2]]).T
     dyn = DynSysL(dim_sys=prob.dim_sys,
                   dim_u=prob.dim_input,
-                  x_ini=x,
+                  x_ini=prob.x_init,
                   constraint_x_u=constraint_x_u,
                   max_w=0)
     exp = Exp(dyn, controller=mpc_qp)

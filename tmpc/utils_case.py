@@ -4,7 +4,8 @@ import numpy as np
 class Probset():
     @property
     def x_init(self):
-        return np.array([[0.], [0.]])
+        x = np.array([[0.2, 0.2]]).T
+        return x
 
     @property
     def dim_sys(self):
