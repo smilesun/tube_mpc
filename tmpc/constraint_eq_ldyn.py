@@ -64,8 +64,9 @@ class ConstraintEqLdyn():
         assert n == self.dim_sys
 
         # Md= [I_{n},[0]_n,[0]_n,[0]_n,|[0]_{n*r},[0]_{n*r},[0]_{n*r}] d =x
-        mat_init_block_zero = np.zeros((n, horizon*(n+r)))
-        mat_init_block = np.hstack([np.eye(n), mat_init_block_zero])
+        mat_init_block_zero = np.zeros((self.dim_sys,
+                                        horizon*(self.dim_sys+self.dim_input)))
+        mat_init_block = np.hstack([np.eye(self.dim_sys), mat_init_block_zero])
 
         mat_block_a = self.build_block_A(horizon, n, r)
         mat_block_b = self.build_block_b(horizon, n)
@@ -98,7 +99,8 @@ class ConstraintEqLdyn():
         - let horizon change each time, so keep horizon as parameter
         """
         block_zero_a = np.zeros((horizon*n, (horizon+1)*n))
-        block_b_subspace = np.kron(self.mat_input, np.eye(horizon))
+        # block_b_subspace = np.kron(self.mat_input, np.eye(horizon))
+        block_b_subspace = np.kron(np.eye(horizon), self.mat_input)
         block_b_full_space = np.hstack(
             [block_zero_a, block_b_subspace])
         return block_b_full_space
@@ -111,7 +113,8 @@ class ConstraintEqLdyn():
         """
         block_zero_b = np.zeros((horizon*n, horizon*r))
         block_zero_a = np.zeros((horizon*n, n))
-        block_a_subspace = np.kron(self.mat_sys, np.eye(horizon))
+        # block_a_subspace = np.kron(self.mat_sys, np.eye(horizon))
+        block_a_subspace = np.kron(np.eye(horizon), self.mat_sys)
         block_a_fullspace = np.hstack(
             [block_a_subspace, block_zero_a, block_zero_b])
         return block_a_fullspace

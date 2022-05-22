@@ -36,7 +36,9 @@ def test_mpc():
                   dim_u=prob.dim_input,
                   x_ini=prob.x_init,
                   constraint_x_u=constraint_x_u,
-                  max_w=0)
+                  max_w=0,
+                  mat_sys=prob.mat_sys,
+                  mat_input=prob.mat_input)
     exp = Exp(dyn, controller=mpc_qp)
     print("new exp")
     exp.run(20, horizon)

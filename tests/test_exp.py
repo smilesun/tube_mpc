@@ -29,7 +29,7 @@ def test_exp():
         mat_k_z=mat_k_s,
         mat_constraint4w=prob.mat_w,
         constraint_x_u=constraint_x_u,
-        alpha_ini=0.001,
+        alpha_ini=0.0001,
         tolerance=0.01)
 
     x = np.array([[0.2, 0.2]]).T
@@ -37,7 +37,9 @@ def test_exp():
                   dim_u=prob.dim_input,
                   x_ini=x,
                   constraint_x_u=constraint_x_u,
-                  max_w=prob.max_w)
+                  max_w=prob.max_w,
+                  mat_sys=prob.mat_sys,
+                  mat_input=prob.mat_input)
     exp = Exp(dyn, controller=mpctube)
     print("new exp")
     exp.run(20, horizon)

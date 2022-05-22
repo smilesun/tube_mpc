@@ -4,7 +4,9 @@ import numpy as np
 class DynSysL():
     """DynSysL: linear dynamic system"""
 
-    def __init__(self, dim_sys, dim_u, x_ini, constraint_x_u, max_w):
+    def __init__(self, dim_sys, dim_u, x_ini, constraint_x_u, max_w,
+                 mat_sys,
+                 mat_input):
         """__init__.
         :param dim_sys:
         :param dim_u:
@@ -13,8 +15,12 @@ class DynSysL():
         self.dim_sys = dim_sys
         self.max_w = max_w
         self._constraint_x_u = constraint_x_u
-        self._mat_sys = np.random.rand(dim_sys, dim_sys)
-        self._mat_input = np.random.rand(dim_sys, dim_u)
+        self._mat_sys = mat_sys
+        # NOTE: in many cases, mpc, designed with a nominal system,
+        # works also for random systems
+        # self._mat_sys = np.random.rand(dim_sys, dim_sys)
+        # self._mat_input = np.random.rand(dim_sys, dim_u)
+        self._mat_input = mat_input
         self._x = x_ini
         self._u = None
 

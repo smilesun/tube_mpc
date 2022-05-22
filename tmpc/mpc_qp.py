@@ -45,12 +45,13 @@ class MPCqp():
             mat_input=self.mat_input,
             mat_sys=self.mat_sys)
         #
-        self.constraint_terminal = ConstraintBlockHorizonTerminal(
+        self.constraint_terminal_block = ConstraintBlockHorizonTerminal(
             constraint_x_u,
             mat_k=mat_k,
             mat_sys=mat_sys,
             mat_input=mat_input)
-        self.constraint_stage = ConstraintHorizonBlockStageXU(
+
+        self.constraint_stage_block = ConstraintHorizonBlockStageXU(
             mat_state_ub=constraint_x_u.mat_xu_x,
             mat_u_ub=constraint_x_u.mat_xu_u)
 
@@ -63,10 +64,10 @@ class MPCqp():
         dim_sys = x_obs.shape[0]
         mat_dyn_eq, mat_b_dyn_eq = self.eq_constraint_builder(x_obs, horizon)
         block_mat_terminal_a, block_mat_terminal_b = \
-            self.constraint_terminal(horizon)
+            self.constraint_terminal_block(horizon)
 
         block_mat_stage_a, block_mat_stage_b = \
-            self.constraint_stage(horizon)
+            self.constraint_stage_block(horizon)
 
         """
         # there can be more inequality constraint than number of state!
