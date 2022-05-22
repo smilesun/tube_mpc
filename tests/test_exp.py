@@ -14,8 +14,7 @@ def test_exp():
     mat_input = prob.mat_input
     mat_x = prob.x_only_constraint
     mat_u = prob.u_only_constraint
-
-    mat_constraint4w = np.array([[1, 0], [0, 1]])
+    mat_w = prob.mat_w
 
     constraint_x_u = ConstraintStageXU(
         dim_sys=prob.dim_sys,
@@ -23,14 +22,14 @@ def test_exp():
         mat_x=mat_x,
         mat_u=mat_u)
 
-    mat_k_s = control.place(prob.mat_sys, prob.mat_input, [-0.2, -0.1])
+    mat_k_s = control.place(prob.mat_sys, prob.mat_input, [-0.2, 0.1])
     mat_k_s = -1.0 * mat_k_s
 
     constraint_j_alpha = ConstraintSAlpha(
         mat_sys=prob.mat_sys,
         mat_input=prob.mat_input,
         mat_k_s=mat_k_s,
-        mat_w=mat_constraint4w,
+        mat_w=prob.mat_w,
         max_iter=100)
     alpha_ini = 0.001
     j_alpha = constraint_j_alpha.cal_power_given_alpha(alpha_ini)
@@ -41,7 +40,7 @@ def test_exp():
         mat_r=prob.mat_r,
         mat_k_s=mat_k_s,
         mat_k_z=mat_k_s,
-        mat_constraint4w=mat_constraint4w,
+        mat_constraint4w=prob.mat_w,
         constraint_x_u=constraint_x_u,
         j_alpha=j_alpha,
         alpha_ini=alpha_ini,
@@ -58,7 +57,6 @@ def test_exp():
                   dim_u=prob.dim_input,
                   x_ini=x,
                   constraint_x_u=constraint_x_u,
-                  max_w=0)
+                  max_w=prob.max_w)
     exp = Exp(dyn, controller=mpctube)
-    exp.run(2, 3, j_alpha=j_alpha)
     exp.run(200, 3, j_alpha=j_alpha)

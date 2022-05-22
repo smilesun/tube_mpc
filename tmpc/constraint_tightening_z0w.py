@@ -125,10 +125,10 @@ class ConstraintZ0w():
         [[0]_{}, kron(mat_w, ones(1, J))]*
         [z_0^T, z_{1:T}, v_{0:T-1}, w_1^T, ..., w_{J}^T]^T <=[1]
         """
-        mat_0 = np.zeros((
-            self.dim_sys*self._j_alpha,
-            (horizon+1)*self.dim_sys + horizon*self.dim_input))
         list_w = [self.mat_w for _ in range(self._j_alpha)]
         block_mat_w = scipy.linalg.block_diag(*list_w)
+        mat_0 = np.zeros((
+            block_mat_w.shape[0],
+            (horizon+1)*self.dim_sys + horizon*self.dim_input))
         self.mat_ub = np.hstack([mat_0, block_mat_w])
         return self.mat_ub

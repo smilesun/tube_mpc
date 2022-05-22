@@ -147,7 +147,9 @@ Z_k = X_k - S_k \\in X_k - S_{\\infty} = {Z_k}^{worst}
         vec_z = self.mat_constraint4z[i, :]
         h_support = self.obj_support_decomp.decomp_support_minkow_sum(
             vec_q, self.j_alpha)
-        return vec_z / (1-h_support)   # FIXME: check divide by zero?
+        # 1-h_support can be either bigger or smaller than zero
+        vec = vec_z / (1-h_support)   # FIXME: check divide by zero?
+        return vec
 
     def __call__(self):
         """__call__."""

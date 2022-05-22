@@ -78,6 +78,6 @@ def test_constraint_xu_stage_block():
                             mat_x=mat_x,
                             mat_u=mat_u)
     constra = ConstraintHorizonBlockStageXU(
-        mat_state_ub=obj.mat_x,
-        mat_u_ub=obj.mat_u)
+        mat_state_ub=obj.mat_xu_x,
+        mat_u_ub=obj.mat_xu_u)
     mat, vec_b = constra(3)

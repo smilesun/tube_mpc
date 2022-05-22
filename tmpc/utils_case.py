@@ -54,3 +54,23 @@ class Probset():
         """
         mat_u = np.array([[1]])
         return mat_u
+
+    @property
+    def mat_w(self):
+        """
+        100*w_1 <= 1
+        -100*w_1 <= 1  <=> w_1 >=-0.01
+        100*w_x <=1
+        -100*w_2 <= 1  <=> w_2 >=-0.01
+        """
+        coefficient = 1/self.max_w
+        mat_constraint4w = np.array([
+            [coefficient, 0],
+            [-1.0*coefficient, 0],
+            [0, coefficient],
+            [0, -1.0*coefficient]])
+        return mat_constraint4w
+
+    @property
+    def max_w(self):
+        return 0.01

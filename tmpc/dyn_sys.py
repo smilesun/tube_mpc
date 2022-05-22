@@ -31,8 +31,8 @@ class DynSysL():
     def x(self):
         return self._x
 
-    def verify_x(self, x):
-        self._constraint_x_u.verify_x(x)
+    def verify_x(self):
+        self._constraint_x_u.verify_x(self.x)
 
     def verify_u(self, u):
         self._constraint_x_u.verify_u(u)
@@ -41,7 +41,7 @@ class DynSysL():
         vec_w = np.random.randn(self.dim_sys, 1)
         ind = (vec_w > self.max_w)
         vec_w[ind] = self.max_w
-        ind = (vec_w < self.max_w)
+        ind = (vec_w < -1.0*self.max_w)
         vec_w[ind] = -1.0 * self.max_w
         return vec_w
 
@@ -50,4 +50,4 @@ class DynSysL():
         self.verify_u(vec_u)
         self._x = np.matmul(self._mat_sys, self._x) + \
             np.matmul(self.mat_input, vec_u) + self.gen_disturb()
-        self.verify_x(self._x)
+        self.verify_x()

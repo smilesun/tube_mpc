@@ -111,13 +111,13 @@ class ConstraintZT():
         """
         self.max_iter4pos_inva = max_iter4pos_inva
         self.mat4z_terminal = None  # matrix to generate
-        # Cx+Du<=1
+        # Cx+Du<=1  # note both C and D have all zero rows
         # C(z+s) + D(K^{z}z+K^{s}s<=1)
         # (C+DK^{z})z + (C+DK^{s})s<=1
-        mat_constraint4z = constraint_x_u.mat_x + np.matmul(
-            constraint_x_u.mat_u, mat_k_z)
-        mat_constraint4s = constraint_x_u.mat_x + np.matmul(
-            constraint_x_u.mat_u, mat_k_s)
+        mat_constraint4z = constraint_x_u.mat_xu_x + np.matmul(
+            constraint_x_u.mat_xu_u, mat_k_z)
+        mat_constraint4s = constraint_x_u.mat_xu_x + np.matmul(
+            constraint_x_u.mat_xu_u, mat_k_s)
         self.obj_support_decomp = SupportDecomp(
             mat_set=mat_constraint4w,
             mat_sys=mat_sys,

@@ -141,9 +141,9 @@ class MPCqpTube(MPCqp):
         self.mat_sys = mat_sys
         self.dim_input = mat_input.shape[1]
         self.j_alpha = j_alpha
-        mat_a_c4s = mat_sys + np.matmul(mat_input, mat_k_s)
         self.qp_loss = LqrQpLoss(mat_q, mat_r)
 
+        mat_a_c4s = mat_sys + np.matmul(mat_input, mat_k_s)
         self.builder_z_0w = ConstraintZ0w(
             mat_a_c4s=mat_a_c4s,
             mat_w=mat_constraint4w,
@@ -162,10 +162,10 @@ class MPCqpTube(MPCqp):
 
         self.stage_mat4z_terminal = self.builder_z_terminal()
 
-        self.mat_constraint4z = constraint_x_u.mat_x + \
-            np.matmul(constraint_x_u.mat_u, mat_k_z)
-        self.mat_constraint4s = constraint_x_u.mat_x + \
-            np.matmul(constraint_x_u.mat_u, mat_k_s)
+        self.mat_constraint4z = constraint_x_u.mat_xu_x + \
+            np.matmul(constraint_x_u.mat_xu_u, mat_k_z)
+        self.mat_constraint4s = constraint_x_u.mat_xu_x + \
+            np.matmul(constraint_x_u.mat_xu_u, mat_k_s)
 
         self.obj_support_decomp = SupportDecomp(
             mat_set=mat_constraint4w,

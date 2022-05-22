@@ -21,27 +21,55 @@ class ConstraintStageXU():
         y = [x, u]
     """
     def __init__(self, dim_sys, dim_input,
-                 mat_x=None, mat_u=None, mat_xu=None):
+                 mat_x=None, mat_u=None, mat_xu_couple=None):
+        """__init__.
+
+        :param dim_sys:
+        :param dim_input:
+        :param mat_x:
+        :param mat_u:
+        :param mat_xu_couple:
+        """
         self.dim_sys = dim_sys
         self.dim_input = dim_input
 
         if mat_x is not None:
             assert dim_sys == mat_x.shape[1]
             mat_xu1 = np.hstack([mat_x, np.zeros((mat_x.shape[0], dim_input))])
-        mat_stack_xu = mat_xu1
+            mat_stack_xu = mat_xu1
         if mat_u is not None:
             assert dim_input == mat_u.shape[1]
             mat_xu2 = np.hstack([np.zeros((mat_u.shape[0], dim_sys)), mat_u])
             mat_stack_xu = np.vstack([mat_stack_xu, mat_xu2])
-        if mat_xu is not None:
-            mat_stack_xu = np.vstack([mat_stack_xu, mat_xu])
+        if mat_xu_couple is not None:
+            assert (dim_input + dim_sys) == mat_xu_couple.shape[1]
+            mat_stack_xu = np.vstack([mat_stack_xu, mat_xu_couple])
         self._mat = mat_stack_xu
-        self.mat_x = self._mat[:, :self.dim_sys]
-        self.mat_u = self._mat[:, self.dim_sys:]
+        self._mat_only_x = mat_x
+        self._mat_only_u = mat_u
 
     @property
     def mat(self):
+        """mat."""
         return self._mat
+
+    @property
+    def mat_xu_x(self):
+        """mat_xu_x.
+        C^T x + D^Tu <=1
+        [C^T, D^T] u <=1
+        return C^T
+        """
+        return self._mat[:, :self.dim_sys]
+
+    @property
+    def mat_xu_u(self):
+        """mat_xu_u.
+        C^T x + D^Tu <=1
+        [C^T, D^T] u <=1
+        return D^T
+        """
+        return self._mat[:, self.dim_sys:]
 
     def reduce2x(self, mat_k):
         """
@@ -49,10 +77,25 @@ class ConstraintStageXU():
         C^T x + D^TKx <=1
         (C^T + D^TK)x <=1
         """
-        return self.mat_x + np.matmul(self.mat_u, mat_k)
+        return self.mat_xu_x + np.matmul(self.mat_xu_u, mat_k)
 
     def verify_x(self, vec_x):
-        assert all(np.matmul(self.mat_x, vec_x) < 1)
+        """verify_x.
+        C^T x + D^Tu <=1
+        [C^T, D^T] u <=1
+        return c^Tx<=1
+        :param vec_x:
+        """
+        if self._mat_only_x is None:
+            return True
+        assert all(np.matmul(self._mat_only_x, vec_x) < 1)
+        return True  # if could pass assert
 
     def verify_u(self, vec_u):
-        assert all(np.matmul(self.mat_u, vec_u) < 1)
+        """verify_u.
+        :param vec_u:
+        """
+        if self._mat_only_u is None:
+            return True
+        assert all(np.matmul(self._mat_only_u, vec_u) < 1)
+        return True  # if could pass assert

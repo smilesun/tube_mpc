@@ -7,6 +7,7 @@ class Exp():
 
     def run(self, n_iter, horizon, j_alpha):
         print("initial position:", self.dyn.x)
+        self.dyn.verify_x()
         for i in range(n_iter):
             print("iteration", i, "position: ", self.dyn.x)
             vec_u = self.controller(self.dyn.x, horizon, j_alpha)

@@ -43,8 +43,8 @@ class LqrQp():
             mat_sys=mat_sys,
             mat_input=mat_input)
         self.constraint_stage = ConstraintHorizonBlockStageXU(
-            mat_state_ub=constraint_x_u.mat_x,
-            mat_u_ub=constraint_x_u.mat_u)
+            mat_state_ub=constraint_x_u.mat_xu_x,
+            mat_u_ub=constraint_x_u.mat_xu_u)
 
     def gen_loss_block_q(self, mat_q, horizon):
         """
