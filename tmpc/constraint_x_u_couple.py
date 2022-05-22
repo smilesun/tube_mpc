@@ -49,6 +49,14 @@ class ConstraintStageXU():
         self._mat_only_u = mat_u
 
     @property
+    def mat_only_x(self):
+        return self._mat_only_x
+
+    @property
+    def mat_only_u(self):
+        return self._mat_only_u
+
+    @property
     def mat(self):
         """mat."""
         return self._mat

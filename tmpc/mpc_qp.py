@@ -56,8 +56,8 @@ class MPCqp():
             tolerance=tolerance)
 
         self.constraint_stage_block = ConstraintHorizonBlockStageXU(
-            mat_state_ub=constraint_x_u.mat_xu_x,
-            mat_u_ub=constraint_x_u.mat_xu_u)
+            mat_state_ub=constraint_x_u.mat_only_x,
+            mat_u_ub=constraint_x_u.mat_only_u)
 
         self.qp_loss = LqrQpLoss(mat_q, mat_r)
 
@@ -96,6 +96,6 @@ class MPCqp():
             b_ub=block_mat_b_ub,
             A_eq=mat_dyn_eq,
             b_eq=mat_b_dyn_eq)
-        pos_u = (1+horizon)*dim_sys-1
+        pos_u = (1+horizon)*dim_sys  # NOTE: no need to minus 1, otherwise wrong!
         vec_u = vec_x_u[pos_u:pos_u+self.dim_input]
         return vec_u.reshape((len(vec_u), 1))

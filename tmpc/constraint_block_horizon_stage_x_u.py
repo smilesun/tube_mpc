@@ -15,6 +15,9 @@ class ConstraintHorizonBlockStageXU():
         self.mat_state_ub = mat_state_ub
         self.dim_sys = self.mat_state_ub.shape[1]
         self.dim_input = self.mat_u_ub.shape[1]
+        self._block_mat_a_ub = None
+        self._block_mat_b_ub = None
+        self._horizon = None
 
     def gen_block_control_stage_constraint(self, horizon):
         """
@@ -30,7 +33,8 @@ class ConstraintHorizonBlockStageXU():
         """
         nrow = self.mat_u_ub.shape[0]
         zeros = np.zeros((horizon*nrow, (horizon+1)*self.dim_sys))
-        block_mat_diag = np.kron(self.mat_u_ub, np.eye(horizon))
+        block_mat_diag = np.kron(np.eye(horizon), self.mat_u_ub)
+        # NOTE: block_mat_diag = np.kron(self.mat_u_ub, np.eye(horizon))
         block_mat4u = np.hstack([zeros, block_mat_diag])
         #
         b_ub_global4u = np.ones((horizon*self.mat_u_ub.shape[0], 1))
@@ -49,20 +53,20 @@ class ConstraintHorizonBlockStageXU():
         [0, 0, 0, M, |0, 0, 0] [x_{0:T}, u_{0:T-1}]^T =Mx_T<= ones(nrow(M),1)
         M_block[x_{0:T}, u_{0:T-1}]^T <= ones(dim(x)*T, 1)
         """
-        mat_block = np.eye(horizon+1)
-        mat_block[0, 0] = 0
+        mat_block = np.eye(horizon+1)  # generate bigger matrix and remove first block
+        # NOTE: block_mat_ub = np.kron(self.mat_state_ub, mat_block)
+        block_mat_ub = np.kron(mat_block, self.mat_state_ub)
         nrow = self.mat_state_ub.shape[0]
-        block_mat_ub = np.kron(self.mat_state_ub, mat_block)
         block_mat_ub = block_mat_ub[nrow:, :]  # drop the first **block row** (all zero)
         """
         [0]_{nrow(M)[0], r}, [0]_{nrow(M)[0], r}, [0]_{nrow(M)[0], r}
         [0]_{nrow(M)[0], r}, [0]_{nrow(M)[0], r}, [0]_{nrow(M)[0], r}
         [0]_{nrow(M)[0], r}, [0]_{nrow(M)[0], r}, [0]_{nrow(M)[0], r}
         """
-        block_zero = np.zeros((nrow*horizon,
-                               self.dim_input*horizon))
-        # block_zero = np.kron(np.zeros((horizon, horizon)),
-        block_mat_ub = np.hstack([block_mat_ub, block_zero])
+        block_zero4u = np.zeros((nrow*horizon,
+                                 self.dim_input*horizon))
+        # block_zero4u = np.kron(np.zeros((horizon, horizon)),
+        block_mat_ub = np.hstack([block_mat_ub, block_zero4u])
         block_b_ub = np.ones((self.mat_state_ub.shape[0]*horizon, 1))
         return block_mat_ub, block_b_ub
 
@@ -85,6 +89,11 @@ class ConstraintHorizonBlockStageXU():
                                            ones(2T+1, 1)^T]^T
         """
         #
+        if self._horizon == horizon:
+            return self._block_mat_a_ub, self._block_mat_b_ub
         block_mat_b_ub = np.vstack(
             [block_mat_ub_state_b, block_mat_ub_input_b])
+        self._block_mat_a_ub = block_mat_a_ub
+        self._block_mat_b_ub = block_mat_b_ub
+        self._horizon = horizon
         return block_mat_a_ub, block_mat_b_ub

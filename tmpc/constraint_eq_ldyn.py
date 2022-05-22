@@ -57,9 +57,9 @@ class ConstraintEqLdyn():
         :param x: current state
         """
         if self.horizon == horizon:
+            self.mat_rhs[:self.dim_sys, :] = x   # NOTE: must change right hand side!
             return self.mat_lhs, self.mat_rhs
         n = x.shape[0]
-        x = x.reshape(n, 1)   # FIXME: do we need this?
         r = self.dim_input
         assert n == self.dim_sys
 

@@ -1,4 +1,5 @@
 import numpy as np
+import control
 
 
 class Probset():
@@ -17,7 +18,10 @@ class Probset():
 
     @property
     def mat_k(self):
-        return np.array([[1, 1]])
+        mat_k_s = control.place(self.mat_sys, self.mat_input, [-0.2, 0.1])
+        mat_k_s = -1.0 * mat_k_s
+        # return np.array([[1, 1]])
+        return mat_k_s
 
     @property
     def mat_q(self):

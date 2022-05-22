@@ -2,7 +2,6 @@ import pytest
 import numpy as np
 from tmpc.constraint_eq_ldyn import ConstraintEqLdyn
 from tmpc.constraint_eq_ldyn_1_terminal import ConstraintEqLdyn1T
-from tmpc.constraint_block_horizon_terminal import ConstraintBlockHorizonTerminal
 from tmpc.constraint_block_horizon_stage_x_u import ConstraintHorizonBlockStageXU
 from tmpc.constraint_x_u_couple import ConstraintStageXU
 from tmpc.utils_case import Probset
@@ -50,24 +49,6 @@ def test_constraint_xu():
 
     assert np.all(obj.mat[:mat_x.shape[0], :mat_x.shape[1]] == mat_x)
 
-
-def test_constraint_terminal():
-    prob = Probset()
-    mat_x = prob.x_only_constraint
-    mat_u = np.array([[1]])
-    obj = ConstraintStageXU(prob.dim_sys,
-                            prob.dim_input,
-                            mat_x=mat_x,
-                            mat_u=mat_u)
-    horizon = 3
-    # [A_{n*n}+B_{n*r}K_{r*n}]X_{n*1}
-    constraint_terminal = ConstraintBlockHorizonTerminal(
-        obj,
-        mat_k=np.ones((1, 2)),
-        mat_sys=prob.mat_sys,
-        mat_input=prob.mat_input)
-    mat, vec_b = constraint_terminal(horizon)
-    assert mat.shape[1] == prob.dim_sys*(horizon + 1) + prob.dim_input*horizon
 
 def test_constraint_xu_stage_block():
     prob = Probset()
