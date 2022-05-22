@@ -84,15 +84,16 @@ def iterate_invariance(mat0, A,
     mat_k_backstep = mat0
     counter = 0
     for k in range(max_iter):
+        if verbose:
+            print("iteration %d" % (k))
+            print(mat_k_backstep)
+
         mat_k_old = mat_k_backstep
         mat_k_backstep = augment_mat_k(mat_k=mat_k_backstep,
                                        mat0=mat0,
                                        mat_sys=A,
                                        tolerance=tolerance,
                                        call_back=call_back)
-        if verbose:
-            print("iteration %d" % (k))
-            print(mat_k_backstep)
         if call_back:
             call_back(mat_k_backstep, "iteration %d" % (k))
 
