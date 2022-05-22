@@ -76,7 +76,6 @@ class MPCqp():
         """
         # there can be more inequality constraint than number of state!
         """
-        block_mat_a_ub = block_mat_terminal_a
         block_mat_a_ub = np.vstack([block_mat_stage_a,
                                     block_mat_terminal_a])
         """

@@ -46,11 +46,15 @@ class Probset():
 
     @property
     def x_only_constraint(self):
-        mat_x = np.array([[2, -1],
-                          [0, 1],
-                          [1, 0],
-                          [-1, 0],
-                          [0, -1]])
+        #mat_x = np.array([[2, -1],
+        #                  [0, 0.2],
+        #                  [0.2, 0],
+        #                  [-0.2, 0],
+        #                  [0, -0.2]])
+        mat_x = np.array([[0, 0.2],
+                          [0.2, 0],
+                          [-0.2, 0],
+                          [0, -0.2]])
         return mat_x
 
     @property
@@ -58,7 +62,7 @@ class Probset():
         """
         |u|<1
         """
-        mat_u = np.array([[1], [-1]])
+        mat_u = np.array([[0.5], [-0.5]])
         return mat_u
 
     @property

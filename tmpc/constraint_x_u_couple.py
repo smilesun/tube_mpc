@@ -96,7 +96,7 @@ class ConstraintStageXU():
         """
         if self._mat_only_x is None:
             return True
-        assert all(np.matmul(self._mat_only_x, vec_x) < 1)
+        assert all(np.matmul(self._mat_only_x, vec_x) <= 1)   # NOTE <= not <!!!
         return True  # if could pass assert
 
     def verify_u(self, vec_u):
@@ -105,5 +105,9 @@ class ConstraintStageXU():
         """
         if self._mat_only_u is None:
             return True
-        assert all(np.matmul(self._mat_only_u, vec_u) < 1)
+        try:
+            assert all(np.matmul(self._mat_only_u, vec_u) <= 1)  # NOTE <= not <!!!
+        except Exception:
+            print("wrong control input: ", vec_u)
+            raise RuntimeError("input violate constraint!")
         return True  # if could pass assert

@@ -8,7 +8,7 @@ from tmpc.dyn_sys import DynSysL
 
 
 def test_mpc():
-    horizon = 3
+    horizon = 8
 
     #
     prob = Probset()
@@ -33,10 +33,11 @@ def test_mpc():
         tolerance=0.1)
 
     mpc_qp(prob.x_init, horizon)
+    x_init = np.array([[-2], [4]])
 
     dyn = DynSysL(dim_sys=prob.dim_sys,
                   dim_u=prob.dim_input,
-                  x_ini=prob.x_init,
+                  x_ini=x_init,
                   constraint_x_u=constraint_x_u,
                   max_w=0,
                   mat_sys=prob.mat_sys,
@@ -44,3 +45,4 @@ def test_mpc():
     exp = Exp(dyn, controller=mpc_qp)
     print("new exp")
     exp.run(20, horizon)
+    # exp.run(200, horizon)
