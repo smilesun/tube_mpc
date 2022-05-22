@@ -16,6 +16,7 @@ class DynSysL():
         self._mat_sys = np.random.rand(dim_sys, dim_sys)
         self._mat_input = np.random.rand(dim_sys, dim_u)
         self._x = x_ini
+        self._u = None
 
     @property
     def mat_sys(self):
@@ -30,6 +31,10 @@ class DynSysL():
     @property
     def x(self):
         return self._x
+
+    @property
+    def u(self):
+        return self._u
 
     def verify_x(self):
         self._constraint_x_u.verify_x(self.x)
@@ -46,6 +51,7 @@ class DynSysL():
         return vec_w
 
     def step(self, vec_u):
+        self._u = vec_u
         assert vec_u.shape[1] == 1
         self.verify_u(vec_u)
         self._x = np.matmul(self._mat_sys, self._x) + \

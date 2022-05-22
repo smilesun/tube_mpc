@@ -52,7 +52,7 @@ class Probset():
         """
         |u|<1
         """
-        mat_u = np.array([[1]])
+        mat_u = np.array([[1], [-1]])
         return mat_u
 
     @property

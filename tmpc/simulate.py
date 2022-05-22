@@ -14,3 +14,6 @@ class Exp():
             print(self.dyn.x)
             vec_u = self.controller(self.dyn.x, horizon)
             self.dyn.step(vec_u)
+            print("action:")
+            print(self.dyn.u)
+
