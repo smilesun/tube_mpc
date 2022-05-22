@@ -30,7 +30,9 @@ class MPCqp():
     """
     def __init__(self, mat_sys, mat_input,
                  mat_q, mat_r, mat_k,
-                 constraint_x_u):
+                 constraint_x_u,
+                 max_iter4pos_inva,
+                 tolerance):
         """__init__.
         :param obj_dyn:
         """
@@ -49,7 +51,9 @@ class MPCqp():
             constraint_x_u,
             mat_k=mat_k,
             mat_sys=mat_sys,
-            mat_input=mat_input)
+            mat_input=mat_input,
+            max_iter=max_iter4pos_inva,
+            tolerance=tolerance)
 
         self.constraint_stage_block = ConstraintHorizonBlockStageXU(
             mat_state_ub=constraint_x_u.mat_xu_x,

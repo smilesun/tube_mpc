@@ -28,7 +28,9 @@ def test_mpc():
         mat_q=prob.mat_q,
         mat_r=prob.mat_r,
         mat_k=mat_k_s,
-        constraint_x_u=constraint_x_u)
+        constraint_x_u=constraint_x_u,
+        max_iter4pos_inva=10,
+        tolerance=0.1)
 
     mpc_qp(prob.x_init, horizon)
 

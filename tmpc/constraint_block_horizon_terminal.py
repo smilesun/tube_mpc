@@ -21,7 +21,8 @@ class ConstraintBlockHorizonTerminal():
         M_y = [[c1, 0], [0, d2], [c3, d3]]
         and y = [x, u]
     """
-    def __init__(self, constraint_x_u, mat_k, mat_sys, mat_input):
+    def __init__(self, constraint_x_u, mat_k, mat_sys, mat_input, max_iter,
+                 tolerance):
         """__init__.
         :param mat_q:
         """
@@ -30,8 +31,8 @@ class ConstraintBlockHorizonTerminal():
         mat_sys_closed_loop = mat_sys + np.matmul(mat_input, mat_k)  # A+BK
         self.pos_inva = PosInvaTerminalSetBuilder(
             mat_sys_closed_loop,
-            mat_state_constraint, tolerance=0)
-        self.mat_term_inf_pos_inva_k = self.pos_inva(10)  # FIXME:
+            mat_state_constraint, tolerance=tolerance)
+        self.mat_term_inf_pos_inva_k = self.pos_inva(max_iter)
 
     def gen_block_terminal_state_inva_constraint(self, horizon):
         """
@@ -89,8 +90,11 @@ class ConstraintBlockHorizonTerminal():
 
         block_one_hot = np.zeros((1, horizon+1))
         block_one_hot[0, horizon] = 1
+        # NOTE: pay attention to the correct order of kronecker product
+        # block_mat_terminal_x = np.kron(
+        #    self.mat_term_inf_pos_inva_k, block_one_hot)
         block_mat_terminal_x = np.kron(
-            self.mat_term_inf_pos_inva_k, block_one_hot)
+            block_one_hot, self.mat_term_inf_pos_inva_k)
         # FIXME: can not kroneck with x, not u!
         nrow = block_mat_terminal_x.shape[0]
         block_mat_terminal_u = np.kron(np.ones((nrow, self.dim_input)),

@@ -35,3 +35,38 @@ def is_implicit_subset_explicit(mat_a_set_y, mat_x_set_y, mat_n_set_explicit):
         if max_val > 1:
             return False
     return True
+
+
+def fun_is_subset(mat_set1, mat_set2, tolerance):
+    """
+    mat_set1 \\in mat_set2
+    i.e. S_1 \\in S_2
+    <=> for \\any s \\in S_1, => s \\ in S_2
+    <=>M_1*x<=1 => M_2*x<=1
+    """
+    for i in range(mat_set2.shape[0]):
+        half_plane_le = mat_set2[i]
+        if not is_set_in_half_plane(mat_set1, half_plane_le,
+                                    tolerance=tolerance):
+            return False
+    return True
+
+
+def is_set_in_half_plane(mat_poly_set, half_plane_le,
+                         tolerance,
+                         b_ub=None,
+                         fun_criteria=lambda x: x < 1):
+    """
+    polyhedra set is specified by np.matmul(mat_poly_set, x) <= 1
+    support function is defined:
+        h(mat_poly_set, q) = max_{x} q^T*x, s.t. x \\in S={mat_poly_set x <=1}
+    """
+    # NOTE: should be mat_poly_set,
+    # not K-step backward reachability constraint matrix!
+    max_val = fun_support(mat_poly_set, half_plane_le, b_ub)
+
+    if fun_criteria(max_val-tolerance):
+        # if worst case satisfies constraint, then no need for this constraint
+        # to exist
+        return True
+    return False
