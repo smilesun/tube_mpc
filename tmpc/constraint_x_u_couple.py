@@ -108,6 +108,6 @@ class ConstraintStageXU():
         try:
             assert all(np.matmul(self._mat_only_u, vec_u) <= 1)  # NOTE <= not <!!!
         except Exception:
-            print("wrong control input: ", vec_u)
-            raise RuntimeError("input violate constraint!")
+            info = "input violate constraint! %s" % vec_u
+            raise RuntimeError(info)
         return True  # if could pass assert

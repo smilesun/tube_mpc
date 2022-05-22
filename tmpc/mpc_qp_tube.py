@@ -260,6 +260,7 @@ class MPCqpTube(MPCqp):
         list_block_z = []
         include_z0 = 0
         # FIXME:constraint tightening the same for z_0?
+        # NOTE: adding constraint tightening for z_0 result in no solution
         for _ in range(horizon-1+include_z0):
             list_block_z.append(self.stage_mat4z)
         list_block_z.append(self.stage_mat4z_terminal)
