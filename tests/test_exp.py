@@ -43,4 +43,4 @@ def test_exp():
     exp = Exp(dyn, controller=mpctube)
     print("new exp")
     exp.run(20, horizon)
-    # exp.run(200, horizon)
+    exp.run(200, horizon)

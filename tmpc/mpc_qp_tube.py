@@ -258,10 +258,16 @@ class MPCqpTube(MPCqp):
 
         """
         list_block_z = []
-        for _ in range(horizon):  # FIXME:constraint tightening the same for z_0?
+        include_z0 = 0
+        # FIXME:constraint tightening the same for z_0?
+        for _ in range(horizon-1+include_z0):
             list_block_z.append(self.stage_mat4z)
         list_block_z.append(self.stage_mat4z_terminal)
         mat_left = scipy.linalg.block_diag(*list_block_z)
+        if not include_z0:
+            mat_left = np.hstack(
+                [np.zeros((mat_left.shape[0], self.dim_sys)),
+                 mat_left])
         mat_right = np.zeros((
             mat_left.shape[0],
             horizon*self.dim_input + self.dim_sys*self.j_alpha))
