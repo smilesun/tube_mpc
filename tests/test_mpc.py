@@ -33,7 +33,7 @@ def test_mpc():
         tolerance=0.1)
 
     mpc_qp(prob.x_init, horizon)
-    x_init = np.array([[-2], [4]])
+    x_init = np.array([[-4], [4]])
 
     dyn = DynSysL(dim_sys=prob.dim_sys,
                   dim_u=prob.dim_input,

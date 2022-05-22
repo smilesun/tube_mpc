@@ -32,7 +32,7 @@ def test_exp():
         alpha_ini=1e-6,
         tolerance=1e-5)
 
-    x = np.array([[-1, -1]]).T
+    x = np.array([[-0.8, 2]]).T
     dyn = DynSysL(dim_sys=prob.dim_sys,
                   dim_u=prob.dim_input,
                   x_ini=x,

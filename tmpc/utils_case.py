@@ -83,4 +83,4 @@ class Probset():
 
     @property
     def max_w(self):
-        return 0.01
+        return 0.1
