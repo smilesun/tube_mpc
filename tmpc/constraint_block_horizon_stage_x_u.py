@@ -87,5 +87,4 @@ class ConstraintHorizonBlockStageXU():
         #
         block_mat_b_ub = np.vstack(
             [block_mat_ub_state_b, block_mat_ub_input_b])
-
         return block_mat_a_ub, block_mat_b_ub
