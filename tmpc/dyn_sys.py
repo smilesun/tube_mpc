@@ -55,5 +55,7 @@ class DynSysL():
         assert vec_u.shape[1] == 1
         self.verify_u(vec_u)
         self._x = np.matmul(self._mat_sys, self._x) + \
-            np.matmul(self.mat_input, vec_u) + self.gen_disturb()
+            np.matmul(self.mat_input, vec_u)
+        self.verify_x()
+        self._x += self.gen_disturb()
         self.verify_x()
