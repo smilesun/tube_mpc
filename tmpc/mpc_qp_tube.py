@@ -9,6 +9,7 @@ from tmpc.mpc_qp import MPCqp
 from tmpc.block_lqr_loss import LqrQpLossTube
 from tmpc.solver_quadprog import quadprog_solve_qp
 from tmpc.constraint_s_inf import ConstraintSAlpha
+from tmpc.loss_terminal import LyapunovK
 
 
 class MPCqpTube(MPCqp):
@@ -140,7 +141,13 @@ class MPCqpTube(MPCqp):
         self.mat_input = mat_input
         self.mat_sys = mat_sys
         self.dim_input = mat_input.shape[1]
-        self.qp_loss = LqrQpLossTube(mat_q, mat_r)
+
+        mat_a_c = self.mat_sys + np.matmul(self.mat_input, mat_k_z)
+        self.mat_p = LyapunovK(mat_a_c, np.eye(self.dim_sys))()
+
+        self.qp_loss = LqrQpLossTube(mat_q, mat_r, self.mat_p)  #
+        # FIXME: lyapunov function  can also be changed dynamically
+
         constraint_j_alpha = ConstraintSAlpha(
             mat_sys=self.mat_sys,
             mat_input=self.mat_input,

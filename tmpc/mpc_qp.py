@@ -6,6 +6,8 @@ from tmpc.constraint_block_horizon_stage_x_u import \
     ConstraintHorizonBlockStageXU
 from tmpc.solver_quadprog import quadprog_solve_qp
 from tmpc.block_lqr_loss import LqrQpLoss
+from tmpc.loss_terminal import LyapunovK
+
 
 
 
@@ -38,6 +40,7 @@ class MPCqp():
         """
         self.constraint_x_u = constraint_x_u
         self.mat_sys = mat_sys
+        self.dim_sys = mat_sys.shape[0]
         self.mat_input = mat_input
         self.dim_input = mat_input.shape[1]
         self.mat_q = mat_q
@@ -59,7 +62,11 @@ class MPCqp():
             mat_state_ub=constraint_x_u.mat_only_x,
             mat_u_ub=constraint_x_u.mat_only_u)
 
-        self.qp_loss = LqrQpLoss(mat_q, mat_r)
+        mat_a_c = self.mat_sys + np.matmul(self.mat_input, mat_k)
+        self.mat_p = LyapunovK(mat_a_c, np.eye(self.dim_sys))()
+
+        self.qp_loss = LqrQpLoss(mat_q, mat_r, self.mat_p)  # FIXME: lyapunov function
+        # can also be changed dynamically
 
     def __call__(self, x_obs, horizon):
         """__call__.
