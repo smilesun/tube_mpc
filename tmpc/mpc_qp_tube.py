@@ -143,7 +143,7 @@ class MPCqpTube(MPCqp):
         self.dim_input = mat_input.shape[1]
 
         mat_a_c = self.mat_sys + np.matmul(self.mat_input, mat_k_z)
-        self.mat_p = LyapunovK(mat_a_c, np.eye(self.dim_sys))()
+        self.mat_p = LyapunovK(mat_a_c, np.eye(self.dim_sys))()  # FIXME: -Q in Lyapunov equation can also be changed
 
         self.qp_loss = LqrQpLossTube(mat_q, mat_r, self.mat_p)  #
         # FIXME: lyapunov function  can also be changed dynamically
