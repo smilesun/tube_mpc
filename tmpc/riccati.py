@@ -26,8 +26,14 @@ def cal_k_discrete_lqr(mat_sys, mat_input, mat_loss_q, mat_loss_r):
     return mat_k, mat_x, eigs
 
 
-def cal_k_continuous_lqr(mat_sys, mat_input, mat_loss_q, mat_loss_r):
+def cal_k_continuous_inf_horizon_lqr(mat_sys,
+                                     mat_input,
+                                     mat_loss_q,
+                                     mat_loss_r):
     """Solve the continuous time lqr controller.
+    Continuous Riccati :
+        A^TP + PA - PBR^{-1}B^TP+ Q = 0
+
     dx/dt = mat_sys x + mat_input u
     cost = integral x.T*mat_loss_q*x + u.T*mat_loss_r*u
     """
