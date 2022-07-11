@@ -98,7 +98,10 @@ class ConstraintSAlpha():
     # S_J \\subset S_{\\infty} \\subset (1-\\alpha)^{-1} S_J
     """
     def __init__(self, mat_sys, mat_input, mat_k_s, mat_w, max_iter):
-        """__init__."""
+        """__init__.
+        :param max_iter: initially, a J is guesses by the function, then
+        increase J until max_iter number of times.
+        """
         self.mat_a_c = mat_sys + np.matmul(mat_input, mat_k_s)
         eigs, _ = np.linalg.eig(self.mat_a_c)
         assert all(np.abs(eigs) < 1)

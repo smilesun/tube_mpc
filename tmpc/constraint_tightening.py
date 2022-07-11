@@ -40,6 +40,11 @@ w_{k+1} \\in W where W is a bounded(compact) disturbance set
 
 x_k = z_k + s_k
 
+Note starting from current observed full state,
+it is possible to calculate $z_k(x_0)$,
+while $x_k$ is not yet known at $t=0$, but can be measured once
+time comes.
+
 !!!! Note s_k != w_k, since w_k \\in W is bounded, but s_k \\ S_k can grow, s_k
 reflect aggregated effect of disturbance up to the current step. s_k is a state
 variable, which has subspace component of $w_k$

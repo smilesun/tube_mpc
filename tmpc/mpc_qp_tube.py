@@ -129,7 +129,23 @@ class MPCqpTube(MPCqp):
                  alpha_ini,
                  tolerance, max_iter=100):
         """__init__.
-        :param obj_dyn:
+        :param alpha_ini:
+            currently alpha wonnot be adapted but should be
+            provided by user, given alpha, the J below can be calculated
+            ||(A+BK^{s})^JW||<=||(A+BK^{s})^J||*||W||
+            <={||(A+BK^{s})||}^J*||W||
+            In order to have  {||(A+BK^{s})||}^J||W|| <=\\alpha ||W||
+            let J>log_{||(A+BK^{s})||}{\\alpha}
+            -------
+            log_{||(A+BK^{s})||}{\\alpha} = log{\\alpha}/log_{||(A+BK^{s})||}
+        :max_iter:
+            initially, a J is guesses by the function, then increase J until
+            max_iter number of times.
+        :tolerance:
+            When calculating the positive invariant set, the stopping criteria
+            is backward inclusion, the linear program might return a value
+            close to 1, which is good enough. So a numerical tolerance
+            indicating good enough is needed.
         """
         self.mat_q = mat_q
         self.mat_r = mat_r
