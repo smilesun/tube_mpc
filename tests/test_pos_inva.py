@@ -1,11 +1,11 @@
 import numpy as np
 from tmpc.constraint_block_horizon_terminal import ConstraintBlockHorizonTerminal
-from tmpc.utils_case import Probset
+from tmpc.utils_case import ScenarioDummy
 from tmpc.constraint_x_u_couple import ConstraintStageXU
 
 
 def test_constraint_terminal():
-    prob = Probset()
+    prob = ScenarioDummy()
     obj = ConstraintStageXU(prob.dim_sys,
                             prob.dim_input,
                             mat_x=prob.x_only_constraint,

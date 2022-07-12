@@ -1,12 +1,12 @@
 import numpy as np
 from tmpc.mpc_qp_tube import MPCqpTube
 from tmpc.constraint_x_u_couple import ConstraintStageXU
-from tmpc.utils_case import Probset
+from tmpc.utils_case import ScenarioDummy
 import control
 
 
 def test_tube():
-    prob = Probset()
+    prob = ScenarioDummy()
 
     constraint_x_u = ConstraintStageXU(
         dim_sys=prob.dim_sys,

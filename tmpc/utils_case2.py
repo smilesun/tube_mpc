@@ -2,7 +2,7 @@ import numpy as np
 import control
 
 
-class Probset():
+class ScenarioDummy():
     @property
     def x_init(self):
         x = np.array([[0.2, 0.2]]).T

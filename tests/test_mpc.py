@@ -1,7 +1,7 @@
 import numpy as np
 import control
 from tmpc.constraint_x_u_couple import ConstraintStageXU
-from tmpc.utils_case import Probset
+from tmpc.utils_case import ScenarioDummy
 from tmpc.mpc_qp import MPCqp
 from tmpc.simulate import Exp
 from tmpc.dyn_sys import DynSysL
@@ -11,7 +11,7 @@ def test_mpc():
     horizon = 8
 
     #
-    prob = Probset()
+    prob = ScenarioDummy()
 
     constraint_x_u = ConstraintStageXU(
         dim_sys=prob.dim_sys,

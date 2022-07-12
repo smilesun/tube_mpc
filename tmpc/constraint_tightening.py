@@ -46,8 +46,16 @@ while $x_k$ is not yet known at $t=0$, but can be measured once
 time comes.
 
 !!!! Note s_k != w_k, since w_k \\in W is bounded, but s_k \\ S_k can grow, s_k
-reflect aggregated effect of disturbance up to the current step. s_k is a state
-variable, which has subspace component of $w_k$
+reflect (weighted) aggregated effect of disturbance up to the current step.
+s_k is a state variable, which has subspace component of $w_k$
+
+In fact
+$$s_k = \\sum_{j=0}^{k-1}A^jw_{k-1-j}$$, see below
+
+(Note x_k=s_k+x_k, let A operate on it, due to linearity, we have separation,
+not true for nonlinear system)
+
+let $$u_k=K^{(s)}(x_k-z_k)+u^{(norminal)}$$
 
 z_{k+1} = Az_k + Bv_k = Az_{k} + BK^{z}*z_{k} = (A+BK^{z})z_{k}
 u_k = v_k + K^{s}*s_k    (note s_k is a state variable of aggregated effect of

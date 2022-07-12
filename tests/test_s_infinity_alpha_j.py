@@ -1,7 +1,7 @@
 import numpy as np
 from tmpc.mpc_qp_tube import MPCqpTube
 from tmpc.constraint_x_u_couple import ConstraintStageXU
-from tmpc.utils_case import Probset
+from tmpc.utils_case import ScenarioDummy
 from tmpc.constraint_s_inf import ConstraintSAlpha
 from tmpc.support_set_inclusion import is_implicit_subset_explicit
 import control
@@ -37,7 +37,7 @@ def pole_place():
     np.linalg.eig(mat_c)
 
 def test_j_alpha():
-    prob = Probset()
+    prob = ScenarioDummy()
     mat_constraint4w = np.array([[1, 0], [0, 1]])
     prob.mat_sys
     np.linalg.eig(prob.mat_sys)

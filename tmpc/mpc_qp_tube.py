@@ -134,10 +134,12 @@ class MPCqpTube(MPCqp):
             provided by user, given alpha, the J below can be calculated
             ||(A+BK^{s})^JW||<=||(A+BK^{s})^J||*||W||
             <={||(A+BK^{s})||}^J*||W||
-            In order to have  {||(A+BK^{s})||}^J||W|| <=\\alpha ||W||
-            let J>log_{||(A+BK^{s})||}{\\alpha}
+            In order to have
+                $${||(A+BK^{s})||}^J||W|| <=\\alpha ||W||$$
+            let $$J>log_{||(A+BK^{s})||}{\\alpha}$$
             -------
-            log_{||(A+BK^{s})||}{\\alpha} = log{\\alpha}/log_{||(A+BK^{s})||}
+            $$log_{||(A+BK^{s})||}{\\alpha} =
+            log{\\alpha}/log_{||(A+BK^{s})||}$$
         :max_iter:
             initially, a J is guesses by the function, then increase J until
             max_iter number of times.

@@ -4,11 +4,11 @@ from tmpc.constraint_eq_ldyn import ConstraintEqLdyn
 from tmpc.constraint_eq_ldyn_1_terminal import ConstraintEqLdyn1T
 from tmpc.constraint_block_horizon_stage_x_u import ConstraintHorizonBlockStageXU
 from tmpc.constraint_x_u_couple import ConstraintStageXU
-from tmpc.utils_case import Probset
+from tmpc.utils_case import ScenarioDummy
 
 
 def test_constraint_eq_dyn_xv():
-    prob = Probset()
+    prob = ScenarioDummy()
     horizon = 3
     builder = ConstraintEqLdyn1T(prob.mat_input, prob.mat_sys)
     mat_lhs = builder(horizon=horizon)
@@ -41,7 +41,7 @@ def test_constraint_eq_dyn():
     assert mat.shape[0] == n*(horizon+1)
 
 def test_constraint_xu():
-    mat_x = Probset().x_only_constraint
+    mat_x = ScenarioDummy().x_only_constraint
     mat_u = np.array([[1]])
     obj = ConstraintStageXU(dim_sys=2, dim_input=1,
                             mat_x=mat_x,
@@ -51,7 +51,7 @@ def test_constraint_xu():
 
 
 def test_constraint_xu_stage_block():
-    prob = Probset()
+    prob = ScenarioDummy()
     mat_x = prob.x_only_constraint
     mat_u = np.array([[1]])
     obj = ConstraintStageXU(dim_sys=prob.dim_sys,

@@ -2,14 +2,14 @@ import numpy as np
 import control
 from tmpc.mpc_qp_tube import MPCqpTube
 from tmpc.constraint_x_u_couple import ConstraintStageXU
-from tmpc.utils_case2 import Probset
+from tmpc.utils_case2 import ScenarioDummy
 from tmpc.simulate import Exp
 from tmpc.dyn_sys import DynSysL
 
 
 def test_exp():
     horizon = 8
-    prob = Probset()
+    prob = ScenarioDummy()
 
     constraint_x_u = ConstraintStageXU(
         dim_sys=prob.dim_sys,

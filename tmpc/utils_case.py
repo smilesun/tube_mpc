@@ -1,23 +1,28 @@
 import numpy as np
 import control
+from utils_scenario import Scenario
 
 
-class Probset():
+class ScenarioDummy(Scenario):
     @property
     def x_init(self):
+        """x_init."""
         x = np.array([[0.2, 0.2]]).T
         return x
 
     @property
     def dim_sys(self):
+        """dim_sys."""
         return 2
 
     @property
     def dim_input(self):
+        """dim_input."""
         return 1
 
     @property
     def mat_k(self):
+        """mat_k."""
         mat_k_s = control.place(self.mat_sys, self.mat_input, [-0.2, 0.1])
         mat_k_s = -1.0 * mat_k_s
         # return np.array([[1, 1]])
@@ -25,28 +30,33 @@ class Probset():
 
     @property
     def mat_q(self):
+        """mat_q."""
         mat = np.eye(2)
         return mat
 
     @property
     def mat_r(self):
+        """mat_r."""
         mat = np.eye(1)
         return mat
 
     @property
     def mat_sys(self):
+        """mat_sys."""
         mat = np.array([[1.1, 0.5], [0.5, 0.9]])
         return mat
 
     @property
     def mat_input(self):
+        """mat_input."""
         mat = np.zeros((2, 1))
         mat[1] = 0.8
         return mat
 
     @property
     def x_only_constraint(self):
-        #mat_x = np.array([[2, -1],
+        """x_only_constraint."""
+        # mat_x = np.array([[2, -1],
         #                  [0, 0.2],
         #                  [0.2, 0],
         #                  [-0.2, 0],
@@ -83,4 +93,5 @@ class Probset():
 
     @property
     def max_w(self):
+        """max_w."""
         return 0.1
