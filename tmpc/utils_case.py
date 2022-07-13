@@ -1,6 +1,6 @@
 import numpy as np
 import control
-from utils_scenario import Scenario
+from tmpc.utils_scenario import Scenario
 
 
 class ScenarioDummy(Scenario):
