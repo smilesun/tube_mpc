@@ -5,37 +5,52 @@ from tmpc.support_fun import fun_support
 class SupportDecomp():
     """
     # Support function on Minkowski sum of sets equals sum of support function
-    - set S={minkowski_sum}_{j=0:J-1}S_j
-      h(S, q):= max_s {q^Ts|s=\\sum_{j=0:J-1}s_j \\in S}
+    - set $$S={minkowski_sum}_{j=0:J-1}S_j$$
+      then for given arbitrary direction $$q$$
+      $$h(S, q):= max_s {q^Ts|s=\\sum_{j=0:J-1}s_j \\in S}
       = max_s {q^T\\sum_{j=0:J-1}s_j |s_j\\in S_j}
       =\\sum_{j=0:J-1}max_{s_j} {q^Ts_j |s_j \\in S_j}
-      =\\sum_{j=0:J-1}h(S_j, q)
+      =\\sum_{j=0:J-1}h(S_j, q)$$
 
       in summary:
-          h(S, q) = \\sum_{j=0:J-1}h(S_j, q)
+          $$h(S, q) = \\sum_{j=0:J-1}h(S_j, q)$$
 
-    - set S_j=A^j*{W}:={Aw | w \\in W}
+    - set $$S_j=A^j*{W}:={Aw | w \\in W}$$
+      then
+      $$
       h(S_j, q)
       = h(A^j*{W}, q) = max_{x\\in A^j*{W}}{q^Tx, s.t. x=A^jw, s.t. w \\in W}
       = max_{w\\in W} q^T(A^jw) = max_{w\\in W} ((A^j)^Tq)^Tw
       = h(W, q'=(A^j)^Tq)
+      $$
       in summary:
-      h(A^j*{W}, q) = h({W}, q'=(A^j)^Tq)
+      $$h(A^j*{W}, q) = h({W}, q'=(A^j)^Tq)$$
 
     ## Use Case:
-    Once finite sequence approximation of S_{\\infty} using spectral radius is
-    found, conditioned on enlargement parameter $(1-\\alpha)^{-1}$, s.t.
-    S_{J_{\\alpha}} \\subset S_{\\infty} \\subset  ...
-    ...(1-\\alpha)^{-1}S_{J_{\\alpha}}
-    where,
-    S_{J_{\\alpha}}=\\minkowski_sum_{j=0:J_{\\alpha}-1}(A+BK_s)^j*{W},
-    where J_{\\alpha} satisfies
-    (A+BK_s)^{J_{\\alpha}}{W} \\subset \\alpha{W}
+    Once finite sequence **over** approximation of S_{\\infty}
+    using spectral radius is found, conditioned on enlargement
+    parameter $$(1-\\alpha)^{-1}$$, s.t.
 
-    ## find Decomposition of support function w.r.t. S_{J_{\\alpha}}
-    - h(S_{J_{\\alpha}}, q)= \\sum_{j=0:J_{\\alpha}-1}h(W, [(A+BK^{s})^j]^T*q)
-    - h((1-\\alpha)^{-1}S_{J_{\\alpha}}, q)= ...
-    ...\\sum_{j=0:J_{\\alpha}-1}(1-\\alpha)^{-1}h(W, [(A+BK^{s})^j]^T*q)
+    $$S_{J_{\\alpha}} \\subset S_{\\infty} \\subset  ...
+    ...(1-\\alpha)^{-1}S_{J_{\\alpha}}$$
+
+    where,
+    $$S_{J_{\\alpha}}=\\minkowski_sum_{j=0:J_{\\alpha}-1}(A+BK_s)^j*{W}$$
+    is an **under-approximation**, (however
+    $$1/(1-\\alpha)S_{J_{\\alpha}}$$ is an **over-approximation**.
+
+    and  $$J_{\\alpha}$$ satisfies
+
+    *********************************************************************
+    $$(A+BK_s)^{J_{\\alpha}}{W} \\subset \\alpha{W}$$
+    *********************************************************************
+
+    ## find Decomposition of support function w.r.t. $$S_{J_{\\alpha}}$$
+    - $$h(S_{J_{\\alpha}}, q)=
+    \\sum_{j=0:J_{\\alpha}-1}h(W, [(A+BK^{s})^j]^T*q)$$
+
+    - $$h((1-\\alpha)^{-1}S_{J_{\\alpha}}, q)= ...
+    ...\\sum_{j=0:J_{\\alpha}-1}(1-\\alpha)^{-1}h(W, [(A+BK^{s})^j]^T*q)$$
     """
     def __init__(self, mat_set, mat_sys, mat_input, mat_k_s):
         """__init__.

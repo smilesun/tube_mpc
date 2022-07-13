@@ -1,10 +1,50 @@
 """
+- Support function is essential for constraint tightening in Tube-MPC,
+so we do not really need an explicit representation of the maximal violation
+set.
+- use over-approximation set $$1/(1-\\alpha)S_{J(\\alpha)}$$ to
+    over-approximate $$S^{\\infty}$$ using the trick of
+    $$1/(1-\\alpha)>1$$ for $$\\alpha<1$$, where $$S_{J(\\alpha)}$$
+    is a finite (J) summation, which is an under-approximation.
+- Critical index J:
+    *********************************************************************
+    $$(A+BK_s)^{J_{\\alpha}}{W} \\subset \\alpha{W}$$
+    *********************************************************************
 """
 import numpy as np
 
 
 class ConstraintTightening():
     """
+    - Support function is essential for constraint tightening in Tube-MPC, so
+    we do not really need an explicit representation of the maximal violation
+    set.
+    - use over-approximation set $$1/(1-\\alpha)S_{J(\\alpha)}$$ to
+    over-approximate $$S^{\\infty}$$ using the trick of
+    $$1/(1-\\alpha)>1$$ for $$\\alpha<1$$, where $$S_{J(\\alpha)}$$
+    is a finite (J) summation, which is an under-approximation.
+
+    Critical condition for $$J$$:
+    *********************************************************************
+    $$(A+BK_s)^{J_{\\alpha}}{W} \\subset \\alpha{W}$$
+    where,
+    $$s_k = \\sum_{j=0}^{k-1}A^jw_{k-1-j}$$
+    $$S_k = \\sum_{j=0}^{k-1}A^jW$$
+
+    i.e.
+    the difference (is it pontryargin difference?) between $$S_k$$ and
+    $$S_{k-1}$$ should be a subset of $$\\alpha {W}$$
+    or,
+    The pre-stabalizing gain $$K_s$$ has to be chosen such that
+    to ensure that the closed loop dynamic $$A+BK_s$$ decays the disturbance,
+    (i.e. hurwitz closed loop)
+    while $J(\\alpha)$ (upon fixed $$\\alpha$$) has to be chosen such that
+    after $J$ steps decay, the disturbance has been diminished to "less than"
+    $$\\alpha{W}$$
+    *********************************************************************
+
+
+    Constraint Tightening using support function:
         -constraint tightening for each stage
             original stage constraint for x_t (decoupled from u):
                 Cx_{t}+Du_{t} <=1
@@ -61,7 +101,7 @@ z_{k+1} = Az_k + Bv_k = Az_{k} + BK^{z}*z_{k} = (A+BK^{z})z_{k}
 u_k = v_k + K^{s}*s_k    (note s_k is a state variable of aggregated effect of
 disturbance)
 
-# Develop the dynamic of disturbance
+# Develop the dynamic of sufficient statistic
 
 x_{k+1} = Ax_k+Bu_k+w_{k+1} = Ax_k + B(K^{z}*z_k+K^{s}*s_k) + w_{k+1}
 z_{k+1} = Az_k + Bv_k = Az_{k} + BK^{z}*z_{k} = (A+BK^{z})z_{k}
@@ -86,8 +126,11 @@ If one can calculate S_{\\infty}, then we know the worse case disturbance
 x_k = z_k + s_k, if we know the worst s_k, then we know how to constraint z_k
 from the set perspective,
 X_k = Z_k + S_k  # minkowski sum
-we need a minkowski substraction
-Z_k = X_k - S_k \\in X_k - S_{\\infty} = {Z_k}^{worst}
+we need a Pontryargin substraction
+(The "inverse" of minkowski sum)
+(note set $$A-B+B !=A \\subseteq A$$
+
+Z_k = (X_k - S_k) \\in (X_k - S_{\\infty}) = {Z_k}^{worst}
 
 # How to define {Z_k}^{worst}?
 

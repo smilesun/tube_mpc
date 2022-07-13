@@ -1,7 +1,7 @@
 """
-S_{J(\\alpha)}= (1-\\alpha)^{-1}\\minkowski_sum_{j=0:J-1}(A+BK^{s})^j*{W}
-(Note s_t, as state variable (sufficient statistic) for the disturbed system,
-x_t = z_t + s_t,
+$$S_{J(\\alpha)}= (1-\\alpha)^{-1}\\minkowski_sum_{j=0:J-1}(A+BK^{s})^j*{W}$$
+(Note $$s_t$$, as state variable (sufficient statistic) for the disturbed
+system, $$x_t = z_t + s_t$$,
 is governed by pre-stabalized set dynamic on {S_t}, by choosing K^{s},
 so A+BK^{s} is hurwitz)
 to judge if s_0 \\ in S_J (positive invariant set of state variable)
