@@ -1,6 +1,10 @@
 """
-S_{\\infty}=minkowski_sum_{j=0:\\infty}(A+BK^{s})^j*W
-S_{J}=minkowski_sum_{j=0:J-1}(A+BK^{s})^j*W
+S_{\\infty}=minkowski_sum_{j=0:\\infty}(A+BK^{(s)})^j*W
+$K^{(s)} is the stabalizing control for disturbance ${w_k}$ which is accumulated to ${s_k}$
+Later we have $K^{(z)}$ to denote the gain matrix for the nominal control
+find a short time $J$ which is shorter than the asymptotic convergence time $J^{*}$
+S_{J}=minkowski_sum_{j=0:J-1}(A+BK^{(s)})^j*W
+then a anti-contraction (decimal proportion of the set) will be an overapproximation for S_{\\infty}
 S_{J} \\subset  S_{\\infty} \\subset (1-\\alpha)^{-1}S_{J(\\alpha)}
 
 (1-\\alpha)^{-1}S_{J} provide a upper bound for S_{\\infty}, which
@@ -13,7 +17,7 @@ Let subscript denote time index:
 x_{k+1} = Ax_k+Bu_k+w_k
 where,
 - w_k is disturbance, w_k \\in W where W is a bounded(compact) disturbance set
-- x_k \\in X_k  is the constraint of state
+- x_k \\in X_k  is the constraint of state (cross-section of the tube)
 
 
 # Decompose the system into nominal part and disturbance part
@@ -24,32 +28,37 @@ x_k = z_k + s_k
 reflect aggregated effect of disturbance up to the current step. s_k is a state
 variable
 
-z_{k+1} = Az_k + Bv_k = Az_{k} + BK^{z}*z_{k} = (A+BK^{z})z_{k}
-u_k = v_k + K^{s}*s_k    (note s_k is a state variable of aggregated effect of
+z_{k+1} = Az_k + Bv_k = Az_{k} + BK^{(z)}*z_{k} = (A+BK^{(z)})z_{k}
+
+# Decomposition of control signal
+u_k = v_k + K^{(s)}*s_k    (note s_k is a state variable of aggregated effect of
 disturbance)
 
 # Develop the dynamic of disturbance
 
-x_{k+1} = Ax_k+Bu_k+w_{k+1} = Ax_k + B(K^{z}*z_k+K^{s}*s_k) + w_{k+1}
-z_{k+1} = Az_k + Bv_k = Az_{k} + BK^{z}*z_{k} = (A+BK^{z})z_{k}
-s_{k+1} := x_{k+1}-z_{k+1} = (A+BK^{s})s_k + w_{k+1}
+x_{k+1} = Ax_k+Bu_k+w_{k+1} = Ax_k + B(K^{(z)}*z_k+K^{(s)}*s_k) + w_{k+1}
+z_{k+1} = Az_k + Bv_k = Az_{k} + BK^{(z)}*z_{k} = (A+BK^{(z)})z_{k}
+s_{k+1} := x_{k+1}-z_{k+1} = (A+BK^{(s)})s_k + w_{k+1}  (closed loop noise accumulation dynamic)
 
 # Extend this to minkowski sum of set: set dynamic
-s_{k+1} := x_{k+1}-z_{k+1} = (A+BK^{s})s_k + w_{k+1}
-=>
-S_{k+1} = (A+BK^{s})S_k + W   # minkowski sum of set,
+s_{k+1} := x_{k+1}-z_{k+1} = (A+BK^{(s)})s_k + w_{k+1}
+=> (to set)
+S_{k+1} = (A+BK^{(s)})S_k + W   # minkowski sum of set,
 # note disturbance set W is constant, like M0 for x
 
 # Develop the recursive dynamic of disturbance
-S_{k+1} = (A+BK^{s})S_k + W
-= (A+BK^{s}) [(A+BK^{s})S_{k-1} + W] + W
-= (A+BK^{s})^2*S_{k-1} +  (A+BK^{s})W + (A+BK^{s})^0 W
+S_{k+1} = (A+BK^{(s)})S_k + W
+= (A+BK^{(s)}) [(A+BK^{(s)})S_{k-1} + W] + W
+= (A+BK^{(s)})^2*S_{k-1} +  (A+BK^{(s)})W + (A+BK^{(s)})^0 W
 
 define S_{0}= W
 S_k= \\minkowski_sum_{j=0:k-1}(A+BK^{s})^j*W
 S_{\\infty}= \\minkowski_sum_{j=0:\\infty}(A+BK^{s})^j*W
 
 # decomposition of  S_{\\infty}
+# FIXME: todo
+# Toeplitz matrix
+[] W + [A_{(S)}^{J-1}B; ][w_1, ..., w_{J-1}]^T
 """
 import numpy as np
 from tmpc.support_set_inclusion import is_implicit_subset_explicit
@@ -134,11 +143,23 @@ class ConstraintSAlpha():
 
     def cal_power_given_alpha(self, alpha):
         """cal_power_given_alpha.
-        ||(A+BK^{s})^JW||<=||(A+BK^{s})^J||*||W||
+        The more $\\alpha$ is near 0, the tighter the approximation.
+        The more $\\alpha$ is near 1, the more conservative.
+        $$\\frac{1}{1-\\alpha}=1+\\alpha+\\alpha^2+....$$
+
+        ||(A+BK^{s})^JW||<=||(A+BK^{(s)})^J||*||W||
         <={||(A+BK^{s})||}^J*||W||
-        In order to have  {||(A+BK^{s})||}^J||W|| <=\\alpha ||W||
+
+        ||(A+BK^{(s)})||}^J||W|| shrinks the set $W$, so it is a contraction
+        if $K^{(s)}$ is stablizing and $$\\alpha$$ is less than 1
+
+        In order to have  {||(A+BK^{(s)})||}^J||W|| <=\\alpha ||W||
         let J>log_{||(A+BK^{s})||}{\\alpha}
+        The flip of the sign is because in discrete system, schur stable means
+        the eigen value is smaller than 1, so
+        log_{||(A+BK^{s})||}<0
         -------
+        question: does log_{a}b == \\frac{log(b)}{log(a)}
         log_{||(A+BK^{s})||}{\\alpha} = log{\\alpha}/log_{||(A+BK^{s})||}
         """
         self._alpha = alpha
@@ -157,13 +178,13 @@ class ConstraintSAlpha():
         (A+BK^{s})^JW \\subset \\alpha W, give $J$
 
         # solution 1:
-            - W: {w| Mw<=1}
+            - W: {w| Mw<=1}  (polytope representation of set)
             -set \\alpha W={\\alpha*w|Mw<=1}
-            = {w'=\\alpha*w|M(\\alpha)^{-1}(\\alpha*w)<=1}
-            = {w'|M(\\alpha)^{-1}w'<=1}
+            = {w'=\\alpha*w|M(\\alpha)^{-1}(\\alpha*w)<=1}   (trick divide and multiply alpha)
+            = {w'|M(\\alpha)^{-1}w'<=1}  (w'=\\alpha*w)
 
-            -set (A+BK^{s})^JW
-            ={w'=(A+BK^{s})^Jw|Mw<=1}
+            -set (A+BK^{(s)})^JW
+            ={w'=(A+BK^{s})^Jw|Mw<=1}  (MW<=1 is the polytope representation for W)
             ={w'|Mw<=1 and w'=(A+BK^{s})^Jw}  # Note
             # (A+BK^{s})^J is not necessarily full rank, so
             # there is no explicit expression for this set

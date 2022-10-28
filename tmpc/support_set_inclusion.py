@@ -10,7 +10,7 @@ def is_implicit_subset_explicit(mat_a_set_y, mat_x_set_y, mat_n_set_explicit):
     (mat_n_set_explicit*x <=1):
 
     # For two set
-    Y={y=Ax|Mx<=1}  # in implicit form
+    Y={y=Ax|Mx<=1}  # in implicit form (indirect representation)
     Z={x|Nx<=1}  # in explicit form
     to verify:  Y \\subset Z
     i.e. for \\any y \\in Y, y \\in Z
