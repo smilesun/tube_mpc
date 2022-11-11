@@ -1,4 +1,7 @@
-
+"""
+interaction between dynamic system and controller
+"""
+from tmpc.memo import MemoTraj
 
 class Exp():
     """Exp.
@@ -12,23 +15,26 @@ class Exp():
         """
         self.dyn = dyn
         self.controller = controller
+        self.memo_traj=MemoTraj(
+            shape_state=self.dyn.dim_sys,
+            shape_u=self.dyn.dim_u,
+            name_x='x', name_u='u')
 
-    def run(self, n_iter, horizon):
+    def run(self, nsteps, horizon):
         """run.
-
-        :param n_iter:
-        :param horizon:
+        :param nsteps:
+        :param horizon: optimization horizon
         """
         print("initial position:", self.dyn.x)
         self.dyn.verify_x()
-        for i in range(n_iter):
-            print("iteration", i)
+        for i in range(nsteps):
+            print("step", i)
             print("position:")
             print(self.dyn.x)
             try:
                 vec_u = self.controller(self.dyn.x, horizon)
             except Exception as ex:
-                info = "controller error at iteration %d: at state %s" \
+                info = "controller error at step %d: at state %s" \
                     % (i, str(self.dyn.x))
                 raise RuntimeError(info + str(ex)) from ex
             self.dyn.step(vec_u)
