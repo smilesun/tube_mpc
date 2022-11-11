@@ -22,7 +22,7 @@ class MemoTraj():
         """
         clean up
         """
-        self.dict_list_trajectory = {}
+        self.dict_list_trajectory = {self.state_name:[], self.control_name:[]}
         # {"x":[0.9, 1.1, ...], "u":[1.7, 2.5, 0.09, ...]}
         self.list_trajectory_dict = []
         # [{"x":[[0.9]], "u":[1.7, 3]}, {"x":[1.1], "u":2.5}]
@@ -41,7 +41,9 @@ class MemoTraj():
         array representing state will be checked for correctness of its shape
         the same for control signal
         """
-        assert arr_x.shape == self.shape_state
-        assert arr_x.shape == self.shape_u
+        len_x = max(arr_x.shape) if len(arr_x.shape)==2 else arr_x.shape[0]
+        len_u = max(arr_u.shape) if len(arr_u.shape)==2 else arr_u.shape[0]
+        assert len_x == self.shape_state
+        assert len_u == self.shape_u
         dict_state = {self.state_name: arr_x, self.control_name:arr_u}
         self.takedown(dict_state)

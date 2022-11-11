@@ -40,3 +40,4 @@ class Exp():
             self.dyn.step(vec_u)
             print("action:")
             print(self.dyn.u)
+            self.memo_traj.log_x_u(self.dyn.x, self.dyn.u)
