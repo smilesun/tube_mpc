@@ -24,7 +24,7 @@ def test_exp():
         mat_r=prob.mat_r,
         mat_k_s=prob.mat_k,
         mat_k_z=prob.mat_k,
-        mat_constraint4w=prob.mat_w,
+        mat_constraint4w=prob.mat_w,  # bound for noise
         constraint_x_u=constraint_x_u,
         alpha_ini=1e-6,
         tolerance=1e-5)
