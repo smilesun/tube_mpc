@@ -154,6 +154,7 @@ class MPCqpTube(MPCqp):
         self.mat_ub_block = None
         self.b_ub = None
         self.horizon = None
+        self.constraint_x_u = constraint_x_u
 
         self.dim_sys = mat_sys.shape[0]
         self.mat_input = mat_input

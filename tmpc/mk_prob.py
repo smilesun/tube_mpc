@@ -61,4 +61,4 @@ def mk_problem(mat_sys, mat_input, max_disturbance,
         @property
         def max_w(self):
             return max_disturbance
-    return Scenario
+    return Scenario()

@@ -5,8 +5,9 @@ from tmpc.mpc_qp_tube import MPCqpTube
 from tmpc.constraint_x_u_couple import ConstraintStageXU
 
 
-def mk_controller(prob, mat_k_s, horizon, x_init):
+def mk_controller(prob, mat_k_s, x_init, horizon, alpha_ini=0.01, tolerance=0.01):
     """
+    x_init is crutial for building block matrix
     """
     constraint_x_u = ConstraintStageXU(
         dim_sys=prob.dim_sys,  # dim of system
@@ -23,8 +24,8 @@ def mk_controller(prob, mat_k_s, horizon, x_init):
         mat_k_z=mat_k_s,   # control gain for ideal state
         mat_constraint4w=prob.mat_w,  # box bound for disturbance
         constraint_x_u=constraint_x_u,   # constraint for state and input
-        alpha_ini=0.01,
-        tolerance=0.01)
+        alpha_ini=alpha_ini,
+        tolerance=tolerance)
 
     mpctube.build_mat_block_ub(horizon=horizon)
 

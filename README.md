@@ -1,6 +1,8 @@
   # Tube MPC
 
-  - use `Exp` class in file `.tmpc/simulate.py/` to combine unforced dynamic system and controller to simulate closed loop behavior. See examples in unit
-  tests folder for Exp class.
-  - For tube construction, look at the documentation of `./tmpc/constraint_tightening.py`
-  - For example how to run, see `./tests/test_qp_mpc_tube.py`
+ ```
+ from tmpc.mk_prob import mk_problem
+ from tmpc.mk_controller import mk_controller
+ 
+ prob = mk_problem()
+ ``` 
