@@ -4,9 +4,14 @@ from tmpc.utils_scenario import Scenario
 
 
 class ScenarioDummy(Scenario):
+    """
+    example system
+    """
     @property
     def x_init(self):
-        """x_init."""
+        """x_init.
+        generate initial condition
+        """
         x = np.array([[0.2, 0.2]]).T
         return x
 
@@ -22,7 +27,10 @@ class ScenarioDummy(Scenario):
 
     @property
     def mat_k(self):
-        """mat_k."""
+        """mat_k.
+        control gain matrix
+        """
+        # mat_sys is open loop
         mat_k_s = control.place(self.mat_sys, self.mat_input, [-0.2, 0.1])
         mat_k_s = -1.0 * mat_k_s
         # return np.array([[1, 1]])
@@ -30,13 +38,13 @@ class ScenarioDummy(Scenario):
 
     @property
     def mat_q(self):
-        """mat_q."""
+        """mat_q. for LQR, loss for state deviation from zero"""
         mat = np.eye(2)
         return mat
 
     @property
     def mat_r(self):
-        """mat_r."""
+        """mat_r for LQR, loss for control energy"""
         mat = np.eye(1)
         return mat
 
@@ -55,7 +63,10 @@ class ScenarioDummy(Scenario):
 
     @property
     def x_only_constraint(self):
-        """x_only_constraint."""
+        """x_only_constraint.
+        only allow origin as interior of polytope
+        max_x * x <=1
+        """
         # mat_x = np.array([[2, -1],
         #                  [0, 0.2],
         #                  [0.2, 0],
@@ -65,12 +76,16 @@ class ScenarioDummy(Scenario):
                           [0.2, 0],
                           [-0.2, 0],
                           [0, -0.2]])
+        # 0.2*x_2 <=1
         return mat_x
 
     @property
     def u_only_constraint(self):
         """
-        |u|<1
+        only allow origin as interior of polytope
+        |u|<2
+        0.5 * u <=1
+        -0.5 * u<=1
         """
         mat_u = np.array([[0.5], [-0.5]])
         return mat_u
@@ -78,6 +93,7 @@ class ScenarioDummy(Scenario):
     @property
     def mat_w(self):
         """
+        constraint for disturbance on state
         100*w_1 <= 1
         -100*w_1 <= 1  <=> w_1 >=-0.01
         100*w_x <=1
@@ -93,5 +109,7 @@ class ScenarioDummy(Scenario):
 
     @property
     def max_w(self):
-        """max_w."""
+        """max_w.
+        the maximum absolute value for disturbance
+        """
         return 0.1
