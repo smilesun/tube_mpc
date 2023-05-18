@@ -311,6 +311,7 @@ class MPCqpTube(MPCqp):
         [00,00,00,00]_z[0,0,0]_v[00,00,xx]_w
 
         """
+        self.horizon = horizon
         list_block_z = []
         include_z0 = 0
         # FIXME:constraint tightening the same for z_0?
